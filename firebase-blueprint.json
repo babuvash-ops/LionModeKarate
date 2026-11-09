@@ -1,0 +1,265 @@
+{
+  "entities": {
+    "student": {
+      "title": "Student",
+      "description": "Martial arts student record",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "identificationNumber": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "belt": { "type": "string" },
+        "rank": { "type": "string" },
+        "joinDate": { "type": "string", "format": "date-time" },
+        "membershipStatus": { "type": "string", "enum": ["active", "inactive", "grace"] },
+        "attendanceCount": { "type": "integer" },
+        "photoUrl": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["name", "email", "belt"]
+    },
+    "class": {
+      "title": "Class",
+      "description": "Scheduled martial arts class",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "instructor": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "days": { "type": "array", "items": { "type": "string" } },
+        "category": { "type": "string" },
+        "capacity": { "type": "integer" }
+      },
+      "required": ["title", "instructor", "startTime", "endTime", "days"]
+    },
+    "membership": {
+      "title": "Membership",
+      "description": "Student membership plan",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "planName": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "price": { "type": "number" },
+        "autoRenew": { "type": "boolean" }
+      },
+      "required": ["studentId", "planName", "startDate", "endDate", "price"]
+    },
+    "payment": {
+      "title": "Payment",
+      "description": "Financial transaction record",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["paid", "pending", "failed"] },
+        "category": { "type": "string" }
+      },
+      "required": ["studentId", "amount", "date", "status"]
+    },
+    "attendance": {
+      "title": "Attendance",
+      "description": "Class check-in record",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "classId": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "classId", "date"]
+    },
+    "announcement": {
+      "title": "Announcement",
+      "description": "Tactical school-wide announcement",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "type": { "type": "string", "enum": ["urgent", "normal", "event"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "author": { "type": "string" }
+      },
+      "required": ["title", "content", "type", "createdAt"]
+    },
+    "pushToken": {
+      "title": "Push Token",
+      "description": "Device push notification token mapping",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "token": { "type": "string" },
+        "platform": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "token"]
+    },
+    "branch": {
+      "title": "Branch",
+      "description": "Dojo branch location",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "managerId": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "inventoryItem": {
+      "title": "Inventory Item",
+      "description": "Product in the pro-shop",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "stock": { "type": "number" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["name", "price", "stock"]
+    },
+    "lead": {
+      "title": "Lead",
+      "description": "Prospective student",
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string" },
+        "status": { "type": "string", "enum": ["new", "contacted", "trial_booked", "enrolled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["firstName", "lastName", "email", "status"]
+    },
+    "tutorial": {
+      "title": "Tutorial",
+      "description": "Curriculum video",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "beltLevel": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "category": { "type": "string", "enum": ["kata", "sparring", "fundamentals"] }
+      },
+      "required": ["title", "beltLevel"]
+    },
+    "newsletter_subscriber": {
+      "title": "Newsletter Subscriber",
+      "description": "Email subscriber for school updates",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "unsubscribed"] }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "appSetting": {
+      "title": "App Setting",
+      "description": "Global application configuration",
+      "type": "object",
+      "properties": {
+        "heroImages": { "type": "array", "items": { "type": "string" } },
+        "schoolName": { "type": "string" },
+        "contactEmail": { "type": "string" }
+      }
+    },
+    "booking": {
+      "title": "Booking",
+      "description": "Student class attendance booking",
+      "type": "object",
+      "properties": {
+        "classId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentEmail": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "day": { "type": "string" }
+      },
+      "required": ["classId", "studentId", "day"]
+    },
+    "chatSession": {
+      "title": "Chat Session",
+      "description": "Sensei AI conversation sessions",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "model": { "type": "string" },
+        "messages": { "type": "array" }
+      },
+      "required": ["title", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/appSettings/{settingId}": {
+      "schema": "appSetting",
+      "description": "Global application settings"
+    },
+    "/students/{studentId}": {
+      "schema": "student",
+      "description": "Martial arts school students"
+    },
+    "/classes/{classId}": {
+      "schema": "class",
+      "description": "Available classes/sessions"
+    },
+    "/memberships/{membershipId}": {
+      "schema": "membership",
+      "description": "Student membership records"
+    },
+    "/payments/{paymentId}": {
+      "schema": "payment",
+      "description": "Transaction logs"
+    },
+    "/attendance/{attendanceId}": {
+      "schema": "attendance",
+      "description": "Daily attendance logs"
+    },
+    "/announcements/{announcementId}": {
+      "schema": "announcement",
+      "description": "School announcements"
+    },
+    "/pushTokens/{tokenId}": {
+      "schema": "pushToken",
+      "description": "FCM/WebPush registration tokens"
+    },
+    "/branches/{branchId}": {
+      "schema": "branch",
+      "description": "Regional dojo branch configurations"
+    },
+    "/inventory/{itemId}": {
+      "schema": "inventoryItem",
+      "description": "Pro-Shop equipment and apparel stock"
+    },
+    "/shopOrders/{orderId}": {
+      "schema": "shopOrder",
+      "description": "Transactions from the Pro-Shop"
+    },
+    "/leads/{leadId}": {
+      "schema": "lead",
+      "description": "Inbound trial and marketing leads"
+    },
+    "/tutorials/{tutorialId}": {
+      "schema": "tutorial",
+      "description": "Video-on-demand curriculum library"
+    },
+    "/newsletter_subscribers/{subscriberId}": {
+      "schema": "newsletter_subscriber",
+      "description": "Public mailing list subscribers"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "booking",
+      "description": "Student attendance bookings"
+    },
+    "/chatSessions/{sessionId}": {
+      "schema": "chatSession",
+      "description": "Sensei AI conversation sessions"
+    }
+  }
+}

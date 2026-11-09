@@ -1,0 +1,9 @@
+{
+  "name": "DOJO_OS | Martial Arts Ecosystem",
+  "description": "Premium, cinematic, and community-driven martial arts super app. Featuring tactical student passports, admin command centers, and immersive warrior branding.",
+  "requestFramePermissions": [
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

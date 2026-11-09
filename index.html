@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Lion Mode" />
+    <script>
+      // Suppress harmless Vite HMR WebSocket connection warnings in sandbox iframe environment
+      window.addEventListener('error', function(e) {
+        // Ignore benign resource errors (images, icons, preconnects)
+        if (!e.message && e.target && e.target !== window) {
+          return;
+        }
+        if (e.filename && e.filename.indexOf('@vite/client') !== -1) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return true;
+        }
+        if (e.message && (e.message.indexOf('WebSocket') !== -1 || e.message.indexOf('vite-hmr') !== -1 || e.message.indexOf('@vite/client') !== -1)) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return true;
+        }
+        // Mark fatal script error so main.tsx knows not to hide it
+        window.__hasFatalScriptError = true;
+        var loader = document.getElementById('initial-dojo-loader');
+        if (loader) {
+          loader.style.opacity = '1';
+          loader.innerHTML = '<div style="max-width:440px;margin:20px;padding:24px;border:1px solid #D4AF37;background:#141414;color:#fff;border-radius:16px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.8);">' +
+            '<div style="color:#D4AF37;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Lion Mode Karate</div>' +
+            '<div style="color:#fff;font-size:13px;opacity:0.9;margin-bottom:12px;">Browser Cache / Script Notice</div>' +
+            '<div style="color:rgba(255,255,255,0.5);font-size:11px;margin-bottom:18px;font-family:monospace;word-break:break-all;">' + (e.message || 'Script initialization notice') + '</div>' +
+            '<button onclick="localStorage.clear();sessionStorage.clear();if(\'serviceWorker\' in navigator){navigator.serviceWorker.getRegistrations().then(function(regs){for(var r of regs) r.unregister();});}window.location.reload();" style="padding:10px 22px;border-radius:10px;background:linear-gradient(135deg,#D4AF37,#FFB800);color:#000;font-weight:bold;border:none;cursor:pointer;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Clear Cache & Reload</button>' +
+            '</div>';
+        }
+      }, true);
+
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && (String(e.reason).indexOf('WebSocket') !== -1 || String(e.reason).indexOf('vite') !== -1)) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+        }
+      }, true);
+
+      // Early capture of PWA beforeinstallprompt event
+      window.__deferredPrompt = null;
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__deferredPrompt = e;
+        window.dispatchEvent(new CustomEvent('pwa-prompt-available', { detail: e }));
+      });
+      window.addEventListener('appinstalled', function() {
+        window.__deferredPrompt = null;
+        window.__isPWAInstalled = true;
+        window.dispatchEvent(new CustomEvent('pwa-installed'));
+      });
+
+      // Failsafe timer: If app loader hasn't dismissed within 4 seconds, show manual launch action
+      setTimeout(function() {
+        var loader = document.getElementById('initial-dojo-loader');
+        if (loader && !loader.querySelector('.failsafe-btn') && !window.__hasFatalScriptError) {
+          var btn = document.createElement('div');
+          btn.className = 'failsafe-btn';
+          btn.style = 'margin-top:20px;text-align:center;';
+          btn.innerHTML = '<button onclick="var l=document.getElementById(\'initial-dojo-loader\');if(l)l.remove();" style="padding:8px 18px;border-radius:8px;background:rgba(212,175,55,0.15);border:1px solid #D4AF37;color:#D4AF37;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;">Enter Dojo OS &rarr;</button>';
+          loader.appendChild(btn);
+        }
+      }, 4000);
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-apple-touch.png" />
+    <meta name="application-name" content="Lion Mode Karate" />
+    <meta name="apple-mobile-web-app-title" content="Lion Mode Karate" />
+    <meta name="msapplication-TileColor" content="#0A0A0A" />
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+    <meta name="theme-color" content="#0A0A0A" />
+    <title>LION MODE KARATE | DOJO_OS</title>
+    <meta name="description" content="Lion Mode Karate Academy & Dojo OS. Premium martial arts academy ecosystem, student passports, Sensei AI, and member operations." />
+    <meta property="og:title" content="LION MODE KARATE | DOJO_OS" />
+    <meta property="og:description" content="Premium, cinematic, and community-driven martial arts super app." />
+    <style>
+      html, body {
+        background-color: #0A0A0A !important;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body style="background: #0A0A0A; color: white; margin: 0; padding: 0;">
+    <div id="initial-dojo-loader" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0A0A0A;color:#fff;font-family:'Oswald',sans-serif;z-index:9999;transition:opacity 0.25s ease;">
+      <div style="width:52px;height:52px;border:3px solid rgba(212,175,55,0.2);border-top:3px solid #D4AF37;border-radius:50%;animation:dojospin 0.8s linear infinite;margin-bottom:18px;"></div>
+      <div style="color:#D4AF37;font-size:15px;letter-spacing:3px;text-transform:uppercase;font-weight:700;">Lion Mode Karate</div>
+      <div style="color:rgba(255,255,255,0.45);font-size:11px;letter-spacing:1px;margin-top:6px;font-family:'Inter',sans-serif;">Loading Dojo OS...</div>
+      <style>@keyframes dojospin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+    </div>
+    <div id="root" style="background-color: #0A0A0A; min-height: 100vh;"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

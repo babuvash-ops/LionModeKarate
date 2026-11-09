@@ -1,0 +1,46 @@
+DirectoryIndex index.html
+
+<IfModule mod_headers.c>
+  Header set Access-Control-Allow-Origin "*"
+  Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+  Header set Access-Control-Allow-Headers "*"
+
+  # Prevent browsers and proxies from caching index.html so updates take effect immediately
+  <FilesMatch "^(index\.html|sw\.js|manifest\.json)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  # Cache static assets with unique build hashes for 1 year
+  <FilesMatch "\.(js|css|woff2|png|jpg|jpeg|svg|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType application/javascript .js .mjs
+  AddType text/css .css
+  AddType image/svg+xml .svg
+  AddType application/json .json
+  AddType font/woff2 .woff2
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Redirect any legacy index.php directly to root
+  RewriteRule ^index\.php$ /index.html [R=301,L]
+
+  # Serve existing files directly
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+  
+  # Fallback to index.html for SPA client-side routing
+  RewriteRule . /index.html [L]
+</IfModule>
+
+

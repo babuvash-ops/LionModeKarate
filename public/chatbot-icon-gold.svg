@@ -1,0 +1,60 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldBotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF2A3" />
+      <stop offset="30%" stop-color="#FFB800" />
+      <stop offset="70%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#996515" />
+    </linearGradient>
+    <linearGradient id="faceplateGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1C180C" />
+      <stop offset="100%" stop-color="#0A0A0A" />
+    </linearGradient>
+    <linearGradient id="eyeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFBE6" />
+      <stop offset="50%" stop-color="#FFE066" />
+      <stop offset="100%" stop-color="#FFB800" />
+    </linearGradient>
+    <radialGradient id="antennaOrbGrad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="40%" stop-color="#FFE27A" />
+      <stop offset="100%" stop-color="#D4AF37" />
+    </radialGradient>
+  </defs>
+
+  <!-- Antenna -->
+  <rect x="22.5" y="4" width="3" height="6.5" rx="1.5" fill="url(#goldBotGrad)" />
+  <circle cx="24" cy="4" r="3.2" fill="url(#antennaOrbGrad)" stroke="#996515" stroke-width="0.6" />
+  <circle cx="23" cy="3" r="1" fill="#FFFFFF" opacity="0.9" />
+
+  <!-- Ear / Headset Nodes -->
+  <rect x="5.5" y="19" width="3.5" height="11" rx="1.75" fill="url(#goldBotGrad)" stroke="#7A5210" stroke-width="0.5" />
+  <rect x="39" y="19" width="3.5" height="11" rx="1.75" fill="url(#goldBotGrad)" stroke="#7A5210" stroke-width="0.5" />
+  <line x1="9" y1="24.5" x2="10.5" y2="24.5" stroke="url(#goldBotGrad)" stroke-width="1.5" stroke-linecap="round" />
+  <line x1="37.5" y1="24.5" x2="39" y2="24.5" stroke="url(#goldBotGrad)" stroke-width="1.5" stroke-linecap="round" />
+
+  <!-- Outer Head -->
+  <rect x="9.5" y="11.5" width="29" height="26" rx="8" fill="url(#goldBotGrad)" stroke="#7A5210" stroke-width="0.8" />
+  <path d="M17.5 13.5H30.5C34.5 13.5 36.5 15.5 36.5 18" stroke="#FFFFFF" stroke-width="0.9" stroke-linecap="round" opacity="0.6" />
+
+  <!-- Inner Screen Visor -->
+  <rect x="13" y="15" width="22" height="18" rx="5.5" fill="url(#faceplateGrad)" stroke="url(#goldBotGrad)" stroke-width="1.2" />
+
+  <!-- Expressive Eyes -->
+  <rect x="17.5" y="19.5" width="4" height="6.5" rx="2" fill="url(#eyeGrad)" />
+  <circle cx="18.7" cy="20.8" r="0.9" fill="#FFFFFF" />
+
+  <rect x="26.5" y="19.5" width="4" height="6.5" rx="2" fill="url(#eyeGrad)" />
+  <circle cx="27.7" cy="20.8" r="0.9" fill="#FFFFFF" />
+
+  <!-- Smile -->
+  <path d="M20 28.5C21.2 30 26.8 30 28 28.5" stroke="url(#goldBotGrad)" stroke-width="1.6" stroke-linecap="round" />
+
+  <!-- Tech Dots -->
+  <circle cx="15.8" cy="25" r="0.8" fill="#FFB800" opacity="0.6" />
+  <circle cx="32.2" cy="25" r="0.8" fill="#FFB800" opacity="0.6" />
+
+  <!-- Bottom Neck Joint -->
+  <rect x="19" y="38" width="10" height="3" rx="1.5" fill="url(#goldBotGrad)" stroke="#7A5210" stroke-width="0.5" />
+  <line x1="22.5" y1="39.5" x2="25.5" y2="39.5" stroke="#1C180C" stroke-width="1" stroke-linecap="round" />
+</svg>

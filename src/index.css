@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Oswald:wght@300;400;500;600;700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-gold: #D4AF37;
+  --color-dojo-gold: #FFB800;
+  --color-dojo-amber: #F59E0B;
+  --color-dojo-black: #0A0A0A;
+  --color-dojo-panel: rgba(255, 255, 255, 0.03);
+  --color-charcoal: #151515;
+  --color-deep-black: #050505;
+
+  --color-background: hsl(220 15% 6%);
+  --color-foreground: hsl(40 20% 95%);
+  --color-card: hsl(220 15% 10%);
+  --color-card-foreground: hsl(40 20% 95%);
+  --color-popover: hsl(220 15% 8%);
+  --color-popover-foreground: hsl(40 20% 95%);
+  --color-primary: hsl(43 96% 56%);
+  --color-primary-foreground: hsl(220 15% 6%);
+  --color-secondary: hsl(220 12% 16%);
+  --color-secondary-foreground: hsl(40 10% 85%);
+  --color-muted: hsl(220 12% 14%);
+  --color-muted-foreground: hsl(220 10% 55%);
+  --color-accent: hsl(43 96% 56%);
+  --color-accent-foreground: hsl(220 15% 6%);
+  --color-destructive: hsl(0 72% 51%);
+  --color-destructive-foreground: hsl(0 0% 98%);
+  --color-border: hsl(220 12% 18%);
+  --color-input: hsl(220 12% 18%);
+  --color-ring: hsl(43 96% 56%);
+  --color-chart-1: hsl(43 96% 56%);
+  --color-chart-2: hsl(142 71% 45%);
+  --color-chart-3: hsl(217 91% 60%);
+  --color-chart-4: hsl(0 72% 51%);
+  --color-chart-5: hsl(280 65% 60%);
+  --radius-lg: 0.75rem;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui;
+  --font-heading: "Oswald", sans-serif;
+  --font-display: "Bebas Neue", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased font-sans;
+    background-color: hsl(220 15% 6%) !important;
+  }
+}
+
+@layer components {
+  /* Glassmorphic Luxury Container Code */
+  .glass {
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    @apply transition-all duration-300;
+  }
+
+  /* Typography Scales */
+  .section-subtitle {
+    @apply text-amber-500 font-heading text-xs md:text-sm font-bold uppercase tracking-[0.3em] leading-none block mb-2;
+  }
+
+  .section-title {
+    @apply font-heading text-3xl md:text-5xl font-bold uppercase tracking-wide text-white leading-tight;
+  }
+
+  .hero-title {
+    @apply font-heading text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-wide text-white leading-none;
+  }
+
+  .body-text-premium {
+    @apply font-sans text-sm md:text-base leading-relaxed text-gray-300/80 tracking-wide;
+  }
+
+  /* Interactive Premium Elements */
+  .premium-btn-primary {
+    @apply bg-gradient-to-r from-[#D4AF37] to-[#FFB800] text-black font-heading font-bold uppercase tracking-wider text-sm px-6 py-3 rounded-xl transition-all duration-200 transform active:scale-95 hover:brightness-110 shadow-lg hover:shadow-amber-500/10 cursor-pointer;
+  }
+
+  .premium-btn-secondary {
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    @apply text-white font-heading font-bold uppercase tracking-wider text-sm px-6 py-3 rounded-xl transition-all duration-300 transform active:scale-95 hover:bg-white/5 cursor-pointer;
+  }
+
+  .premium-card {
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.01) !important;
+    @apply rounded-[24px] p-6 transition-all duration-300;
+  }
+
+  .premium-card:hover {
+    border-color: rgba(245, 158, 11, 0.3) !important;
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.08) !important;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .shadow-glow { box-shadow: 0 0 30px rgba(212, 175, 55, 0.01); }
+  .shadow-glow-gold { box-shadow: 0 0 25px rgba(212, 175, 55, 0.08); }
+  
+  /* Google Play / Android Mobile Safe Areas */
+  .safe-area-top { 
+    padding-top: max(env(safe-area-inset-top, 0px), 24px); 
+  }
+  .safe-area-bottom { 
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px); 
+  }
+
+  /* High-Contrast Black & White Image Treatment (as per Screenshot 3) */
+  .bw-contrast-image {
+    filter: grayscale(100%) contrast(125%) brightness(90%);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .bw-contrast-image:hover {
+    filter: grayscale(25%) contrast(115%) brightness(95%);
+  }
+
+  /* Soft Black Edge Fade / Vignette */
+  .image-vignette-fade {
+    mask-image: radial-gradient(circle at center, black 60%, transparent 100%);
+    -webkit-mask-image: radial-gradient(circle at center, black 60%, transparent 100%);
+  }
+  .image-bottom-fade {
+    mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
+  }
+}

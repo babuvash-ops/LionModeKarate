@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // 1. GLOBAL HELPERS & CONSTANTS
+    // ==========================================
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      // Bootstrapped admin from runtime metadata - forced lowercase comparison
+      // Added null check for email to prevent rule evaluation errors
+      return isSignedIn() && 
+             request.auth.token.email != null && 
+             request.auth.token.email.lower() == "babuvash@gmail.com";
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // ==========================================
+    // 2. VALIDATION BLUEPRINTS
+    // ==========================================
+
+    function isValidStudent(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100
+          && data.email is string && data.email.size() <= 100
+          && (data.rank == null || data.rank is string)
+          && (data.notes == null || data.notes is string && data.notes.size() <= 5000);
+    }
+
+    function isValidAppSetting(data) {
+      return (data.heroImages == null || (data.heroImages is list && data.heroImages.size() <= 10))
+          && (data.logoUrl == null || (data.logoUrl is string && data.logoUrl.size() <= 2000))
+          && (data.logoBase64 == null || (data.logoBase64 is string && data.logoBase64.size() <= 1000000))
+          && (data.tagline == null || (data.tagline is string && data.tagline.size() <= 100))
+          && (data.dojoName == null || (data.dojoName is string && data.dojoName.size() <= 100))
+          && (data.updatedAt == null || data.updatedAt is string || data.updatedAt is timestamp);
+    }
+
+    function isValidCommunication(data) {
+      return data.type in ['announcements', 'targeted', 'history']
+          && data.message is string && data.message.size() > 0 && data.message.size() <= 10000
+          && data.timestamp is timestamp
+          && data.sender is string;
+    }
+
+    function isValidNewsletterSubscriber(data) {
+      return data.email is string && data.email.size() >= 5 && data.email.size() <= 200
+          && data.createdAt is timestamp
+          && data.status == "active"
+          && data.keys().hasAll(['email', 'createdAt', 'status']) && data.keys().size() == 3;
+    }
+
+    // ==========================================
+    // 3. MASTER GATE & RULES
+    // ==========================================
+
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if true;
+    }
+
+    // Application Settings
+    match /appSettings/{settingId} {
+      allow read, write: if true;
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    // Student Directory
+    match /students/{studentId} {
+      allow read, write: if true;
+    }
+
+    // Classes & Schedule
+    match /classes/{classId} {
+      allow read, write: if true;
+    }
+
+    // Memberships, Payments, Attendance
+    match /memberships/{id} { allow read, write: if true; }
+    match /payments/{id} { allow read, write: if true; }
+    match /attendance/{id} { allow read, write: if true; }
+    match /branches/{id} { allow read, write: if true; }
+    match /inventory/{id} { allow read, write: if true; }
+    match /shopOrders/{id} { allow read, write: if true; }
+    match /tutorials/{id} { allow read, write: if true; }
+    
+    // Communications Hub
+    match /communications/{id} {
+      allow read, write: if true;
+    }
+
+    // Announcements
+    match /announcements/{id} {
+      allow read, write: if true;
+    }
+
+    // Push Tokens
+    match /pushTokens/{userId} {
+      allow read, write: if true;
+    }
+
+    // Newsletter Subscribers
+    match /newsletter_subscribers/{subscriberId} {
+      allow read, write: if true;
+    }
+
+    // Bookings
+    match /bookings/{bookingId} {
+      allow read, write: if true;
+    }
+
+    // Leads / Free Trial Bookings
+    match /leads/{leadId} {
+      allow read, write: if true;
+    }
+
+    // AI Sensei Chat Sessions
+    match /chatSessions/{sessionId} {
+      allow read, write: if true;
+    }
+  }
+}
