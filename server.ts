@@ -17,8 +17,15 @@ async function startServer() {
 
   console.log(`[SYSTEM] Starting server on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode...`);
 
-  // Enable compression for better performance
-  app.use(compression());
+  // Enable compression for text assets, excluding already compressed zip binaries
+  app.use(compression({
+    filter: (req, res) => {
+      if (req.path.includes('.zip') || req.path.includes('.mobileconfig')) {
+        return false;
+      }
+      return compression.filter(req, res);
+    }
+  }));
   app.use(express.json());
 
   // CORS middleware for custom domain support
@@ -230,10 +237,22 @@ async function startServer() {
     ];
     for (const p of candidates) {
       if (fs.existsSync(p)) {
-        res.setHeader('Content-Type', 'application/zip');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        return res.sendFile(p);
+        try {
+          const stat = fs.statSync(p);
+          res.writeHead(200, {
+            'Content-Type': 'application/zip',
+            'Content-Length': stat.size,
+            'Content-Disposition': `attachment; filename="${filename}"`,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Accept-Ranges': 'bytes'
+          });
+          const stream = fs.createReadStream(p);
+          stream.pipe(res);
+          return;
+        } catch (streamErr) {
+          console.error('[STREAM-ERROR]', streamErr);
+          return res.sendFile(p);
+        }
       }
     }
     res.status(404).send('Dojo app build ZIP file not found. Rebuild in progress.');

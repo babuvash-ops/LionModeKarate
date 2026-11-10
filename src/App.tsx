@@ -66,10 +66,14 @@ const AuthenticatedApp = () => {
         </Route>
         <Route path="/admin/athleta-office" element={<AthletaOffice />} />
         <Route path="/admin/athleta-office/my-profile" element={<AthletaOffice />} />
+        <Route path="/admin/athleta-office/message" element={<AthletaOffice />} />
         <Route path="/athleta-office" element={<AthletaOffice />} />
         <Route path="/athleta-office/my-profile" element={<AthletaOffice />} />
+        <Route path="/athleta-office/message" element={<AthletaOffice />} />
         <Route path="/Teacher/v2/en/my-profile" element={<AthletaOffice />} />
         <Route path="/Teacher/v2/en/home" element={<AthletaOffice />} />
+        <Route path="/Teacher/v2/en/students" element={<AthletaOffice />} />
+        <Route path="/Teacher/v2/en/students/message" element={<AthletaOffice />} />
         <Route path="/Teacher/*" element={<AthletaOffice />} />
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />

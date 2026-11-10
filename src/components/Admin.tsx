@@ -222,7 +222,7 @@ export default function Admin() {
                 AthletaOffice <span className="text-[#D4AF37]">Business Management</span>
               </h2>
               <p className="text-sm font-body text-white/70 leading-relaxed">
-                Complete all-in-one dojo management suite modeled after AthletaDesk: Fast-tap mat attendance roll call, student & family CRM, kiosk PIN check-in, automated belt grading eligibility, ZAR invoicing ledger, multi-trainer permissions, automations & pro shop inventory tracking.
+                Complete all-in-one dojo management suite: Fast-tap mat attendance roll call, student & family CRM, kiosk PIN check-in, automated belt grading eligibility, ZAR invoicing ledger, multi-trainer permissions, bulk SMS & email communications, automations & pro shop inventory tracking.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">

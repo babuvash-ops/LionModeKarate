@@ -16,12 +16,19 @@ def package_dist():
     print(f"Creating {zip_path} from {dist_dir}...")
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         for root, dirs, files in os.walk(dist_dir):
+            if 'aistudio' in root:
+                continue
             for file in files:
-                if file == 'dojo-app-build.zip':
+                if file.endswith('.zip') or file.endswith('.tmp'):
                     continue
                 full_path = os.path.join(root, file)
                 rel_path = os.path.relpath(full_path, dist_dir)
                 zf.write(full_path, rel_path)
+
+        # Ensure .htaccess is included in root of zip
+        htaccess_src = os.path.join(app_dir, 'public', '.htaccess')
+        if os.path.exists(htaccess_src):
+            zf.write(htaccess_src, '.htaccess')
 
     # Copy to public/ and dist/
     os.makedirs(os.path.dirname(public_zip), exist_ok=True)
@@ -37,7 +44,7 @@ def package_dist():
     shutil.copyfile(zip_path, v3_dist)
 
     size_mb = os.path.getsize(zip_path) / (1024 * 1024)
-    print(f"SUCCESS: Packaged {zip_path} and {v3_zip} ({size_mb:.2f} MB)")
+    print(f"SUCCESS: Clean production package {zip_path} and {v3_zip} created ({size_mb:.2f} MB)")
     print(f"Copied to {public_zip} and {v3_public}")
     return True
 

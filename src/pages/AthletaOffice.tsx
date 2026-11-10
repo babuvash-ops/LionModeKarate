@@ -59,11 +59,30 @@ import {
   Shield,
   Layers,
   ArrowRight,
+  ArrowLeft,
   Pencil,
   Lock,
   ShieldCheck,
   Star,
-  Key
+  Key,
+  CheckSquare,
+  Square,
+  MessageSquare,
+  Type,
+  Bold,
+  Italic,
+  Underline,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  List,
+  ListOrdered,
+  Link2,
+  Smile,
+  Tag,
+  Undo,
+  Redo,
+  Table
 } from "lucide-react";
 import { 
   ResponsiveContainer, 
@@ -114,6 +133,7 @@ export default function AthletaOffice() {
     | "home"
     | "trainers"
     | "clients"
+    | "message"
     | "calendar"
     | "resources"
     | "invoices"
@@ -236,12 +256,16 @@ export default function AthletaOffice() {
     end: "18:00"
   });
 
-  // URL Hash & Path Synchronization for https://app.athletadesk.com/Teacher/v2/en/my-profile#General
+  // URL Hash & Path Synchronization for AthletaOffice (e.g. /Teacher/v2/en/students/message and my-profile#General)
   useEffect(() => {
     const handleUrlSync = () => {
       const hash = window.location.hash.toLowerCase();
       const path = window.location.pathname.toLowerCase();
-      if (path.includes("my-profile") || hash.includes("profile")) {
+      if (path.includes("students/message") || path.includes("/message") || hash.includes("message")) {
+        setActivePage("message");
+      } else if (path.includes("students") || hash.includes("students") || hash.includes("clients")) {
+        setActivePage("clients");
+      } else if (path.includes("my-profile") || hash.includes("profile")) {
         setActivePage("profile");
       }
       if (hash.includes("general")) {
@@ -287,7 +311,10 @@ export default function AthletaOffice() {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [targetStudentForPhoto, setTargetStudentForPhoto] = useState<string | null>(null);
 
-  // Form states
+  // Clients Roster Selection (For Bulk SMS & Bulk Email)
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+
+  // Comprehensive Client Form state (Captures Email, Cell Number, Tel, Guardian info for SMS & Bulk Email)
   const [newClientForm, setNewClientForm] = useState({
     firstName: "",
     lastName: "",
@@ -297,8 +324,376 @@ export default function AthletaOffice() {
     trainingProgram: "Little Lions (Ages 8–12)",
     assignedInstructor: "Nirvash Babuall",
     medicalNotes: "None",
-    signedWaiver: true
+    signedWaiver: true,
+    email: "",
+    cellNumber: "",
+    phone: "",
+    status: "active" as "active" | "trial" | "pending_approval" | "inactive",
+    beltRank: "White Belt (9th Kyu)",
+    guardianName: "",
+    guardianEmail: "",
+    guardianPhone: "",
+    streetAddress: "14 Palm Boulevard, Umhlanga",
+    city: "Durban",
+    postalCode: "4319"
   });
+
+  // 1:1 Message / New Email State (Exact match to https://app.athletadesk.com/Teacher/v2/en/students/message)
+  const [messageChannel, setMessageChannel] = useState<"email" | "sms">("email");
+  const [messageSender, setMessageSender] = useState("Nirvash Babuall <babuvash@gmail.com>");
+  const [showAllClientsInRecipientsList, setShowAllClientsInRecipientsList] = useState(true);
+  const [recipientSelectMenuOpen, setRecipientSelectMenuOpen] = useState(false);
+  const [recipientSearchInput, setRecipientSearchInput] = useState("");
+  const [extraRecipients, setExtraRecipients] = useState("");
+  const [messageSubject, setMessageSubject] = useState("");
+  const [messageBody, setMessageBody] = useState("");
+  const [selectedRecipients, setSelectedRecipients] = useState<
+    Array<{
+      id: string;
+      name: string;
+      email: string;
+      cellNumber?: string;
+      type: "client" | "contact" | "trainer";
+      category: string;
+    }>
+  >([]);
+  const [showTemplatesDropdown, setShowTemplatesDropdown] = useState(false);
+
+  // Helper: Toggle single client in roster table
+  const toggleSelectClient = (id: string) => {
+    setSelectedClientIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  // Helper: Toggle all clients in roster table
+  const toggleSelectAllClients = () => {
+    if (selectedClientIds.length === data.students.length) {
+      setSelectedClientIds([]);
+    } else {
+      setSelectedClientIds(data.students.map(s => s.id));
+    }
+  };
+
+  // Helper: Open Message composer for a single client
+  const handleSingleClientMessage = (student: StudentRecord, channel: "email" | "sms" = "email") => {
+    setSelectedRecipients([
+      {
+        id: student.id,
+        name: `${student.firstName} ${student.lastName}`,
+        email: student.email || `${student.firstName.toLowerCase()}@lionmodekarate.com`,
+        cellNumber: student.cellNumber || student.phone || "+27 82 555 0192",
+        type: "client",
+        category: "Active Client"
+      }
+    ]);
+    setMessageChannel(channel);
+    setMessageSubject(channel === "email" ? `Lion Mode Karate - Update for ${student.firstName}` : `LMK Update: ${student.firstName}`);
+    setMessageBody(
+      channel === "email"
+        ? `Dear ${student.firstName},\n\nOsu! This is an official notice regarding your training syllabus and upcoming sessions at Lion Mode Karate Academy.\n\nPlease check your schedule and let us know if you have any questions.\n\nWarm regards,\nSensei Nirvash Babuall\nLion Mode Karate Academy`
+        : `Osu ${student.firstName}! Reminder from Sensei Nirvash: your next karate session is scheduled this week. See you on the tatami!`
+    );
+    setActivePage("message");
+    window.location.hash = "message";
+  };
+
+  // Helper: Open Message composer for all currently checked clients in the table
+  const handleBulkClientsMessage = (channel: "email" | "sms" = "email") => {
+    const targets = data.students.filter(s => selectedClientIds.includes(s.id));
+    if (targets.length === 0) {
+      toast.error("Please select at least one client from the roster.");
+      return;
+    }
+    setSelectedRecipients(
+      targets.map(s => ({
+        id: s.id,
+        name: `${s.firstName} ${s.lastName}`,
+        email: s.email || `${s.firstName.toLowerCase()}@lionmodekarate.com`,
+        cellNumber: s.cellNumber || s.phone || "+27 82 555 0192",
+        type: "client",
+        category: s.status === "active" ? "Active Client" : "Trial Client"
+      }))
+    );
+    setMessageChannel(channel);
+    setMessageSubject(channel === "email" ? "Lion Mode Karate Academy - Important Notice" : "LMK Dojo Announcement");
+    setMessageBody(
+      channel === "email"
+        ? `Dear Athletes and Parents,\n\nOsu! This is an official announcement from Lion Mode Karate Academy.\n\nPlease check your portal at https://lionmodekarate.com for recent syllabus updates and grading dates.\n\nWarm regards,\nSensei Nirvash Babuall\nChief Instructor`
+        : `Osu Athletes! Important update from Sensei Nirvash: Dojo training schedule is updated in the portal. Please review your class times.`
+    );
+    setActivePage("message");
+    window.location.hash = "message";
+  };
+
+  // Helper: Handle exact Select... dropdown categories from Screenshot 3
+  const handleSelectRecipientCategory = (categoryKey: string) => {
+    setRecipientSelectMenuOpen(false);
+
+    const trainers = [
+      { id: "TRN-01", name: "Nirvash Babuall", email: "babuvash@gmail.com", cellNumber: "+27 82 123 4567", type: "trainer" as const, category: "Trainers" },
+      { id: "TRN-02", name: "Kevin Moodley", email: "kevin@lionmodekarate.com", cellNumber: "+27 83 234 5678", type: "trainer" as const, category: "Trainers" },
+      { id: "TRN-03", name: "Amanda Govender", email: "amanda@lionmodekarate.com", cellNumber: "+27 84 345 6789", type: "trainer" as const, category: "Trainers" }
+    ];
+
+    if (categoryKey === "clear") {
+      setSelectedRecipients([]);
+      toast.info("Cleared all recipients.");
+      return;
+    }
+
+    let additions: Array<{ id: string; name: string; email: string; cellNumber?: string; type: "client" | "contact" | "trainer"; category: string }> = [];
+
+    switch (categoryKey) {
+      case "active_clients":
+        additions = data.students
+          .filter(s => s.status === "active")
+          .map(s => ({
+            id: s.id,
+            name: `${s.firstName} ${s.lastName}`,
+            email: s.email || `${s.firstName.toLowerCase()}@lionmodekarate.com`,
+            cellNumber: s.cellNumber || "+27 82 555 0192",
+            type: "client",
+            category: "Active Clients"
+          }));
+        break;
+
+      case "trial_clients":
+        additions = data.students
+          .filter(s => s.status === "trial")
+          .map(s => ({
+            id: s.id,
+            name: `${s.firstName} ${s.lastName}`,
+            email: s.email || `${s.firstName.toLowerCase()}@lionmodekarate.com`,
+            cellNumber: s.cellNumber || "+27 82 555 0192",
+            type: "client",
+            category: "Trial Clients"
+          }));
+        break;
+
+      case "inactive_clients":
+        additions = data.students
+          .filter(s => s.status === "inactive" || s.status === "suspended")
+          .map(s => ({
+            id: s.id,
+            name: `${s.firstName} ${s.lastName}`,
+            email: s.email || `${s.firstName.toLowerCase()}@lionmodekarate.com`,
+            cellNumber: s.cellNumber || "+27 82 555 0192",
+            type: "client",
+            category: "Inactive Clients"
+          }));
+        break;
+
+      case "waiting_clients":
+        additions = data.students
+          .filter(s => s.status === "pending_approval")
+          .map(s => ({
+            id: s.id,
+            name: `${s.firstName} ${s.lastName}`,
+            email: s.email || `${s.firstName.toLowerCase()}@lionmodekarate.com`,
+            cellNumber: s.cellNumber || "+27 82 555 0192",
+            type: "client",
+            category: "Waiting Clients"
+          }));
+        break;
+
+      case "lead_clients":
+        additions = data.students
+          .filter(s => s.tags?.some(t => t.toUpperCase().includes("LEAD") || t.toUpperCase().includes("TRIAL")))
+          .map(s => ({
+            id: s.id,
+            name: `${s.firstName} ${s.lastName}`,
+            email: s.email || `${s.firstName.toLowerCase()}@lionmodekarate.com`,
+            cellNumber: s.cellNumber || "+27 82 555 0192",
+            type: "client",
+            category: "Lead Clients"
+          }));
+        break;
+
+      case "active_contacts":
+        additions = data.students
+          .filter(s => s.status === "active")
+          .map(s => ({
+            id: `guard-${s.id}`,
+            name: s.guardianName || `${s.lastName} Family Guardian`,
+            email: s.guardianEmail || "parent@lionmodekarate.com",
+            cellNumber: s.guardianPhone || "+27 82 555 0192",
+            type: "contact",
+            category: "Active Account Contacts"
+          }));
+        break;
+
+      case "trial_contacts":
+        additions = data.students
+          .filter(s => s.status === "trial")
+          .map(s => ({
+            id: `guard-${s.id}`,
+            name: s.guardianName || `${s.lastName} Family Guardian`,
+            email: s.guardianEmail || "parent@lionmodekarate.com",
+            cellNumber: s.guardianPhone || "+27 82 555 0192",
+            type: "contact",
+            category: "Trial Account Contacts"
+          }));
+        break;
+
+      case "inactive_contacts":
+        additions = data.students
+          .filter(s => s.status === "inactive" || s.status === "suspended")
+          .map(s => ({
+            id: `guard-${s.id}`,
+            name: s.guardianName || `${s.lastName} Family Guardian`,
+            email: s.guardianEmail || "parent@lionmodekarate.com",
+            cellNumber: s.guardianPhone || "+27 82 555 0192",
+            type: "contact",
+            category: "Inactive Account Contacts"
+          }));
+        break;
+
+      case "waiting_contacts":
+        additions = data.students
+          .filter(s => s.status === "pending_approval")
+          .map(s => ({
+            id: `guard-${s.id}`,
+            name: s.guardianName || `${s.lastName} Family Guardian`,
+            email: s.guardianEmail || "parent@lionmodekarate.com",
+            cellNumber: s.guardianPhone || "+27 82 555 0192",
+            type: "contact",
+            category: "Waiting Account Contacts"
+          }));
+        break;
+
+      case "lead_contacts":
+        additions = data.students
+          .filter(s => s.tags?.some(t => t.toUpperCase().includes("LEAD") || t.toUpperCase().includes("TRIAL")))
+          .map(s => ({
+            id: `guard-${s.id}`,
+            name: s.guardianName || `${s.lastName} Family Guardian`,
+            email: s.guardianEmail || "parent@lionmodekarate.com",
+            cellNumber: s.guardianPhone || "+27 82 555 0192",
+            type: "contact",
+            category: "Lead Account Contacts"
+          }));
+        break;
+
+      case "trainers":
+        additions = trainers;
+        break;
+
+      case "nirvash_clients":
+        additions = data.students
+          .filter(s => s.assignedInstructor === "Nirvash Babuall")
+          .map(s => ({
+            id: s.id,
+            name: `${s.firstName} ${s.lastName}`,
+            email: s.email || `${s.firstName.toLowerCase()}@lionmodekarate.com`,
+            cellNumber: s.cellNumber || "+27 82 555 0192",
+            type: "client",
+            category: "Nirvash Babuall's Clients"
+          }));
+        break;
+
+      case "nirvash_contacts":
+        additions = data.students
+          .filter(s => s.assignedInstructor === "Nirvash Babuall")
+          .map(s => ({
+            id: `guard-${s.id}`,
+            name: s.guardianName || `${s.lastName} Family Guardian`,
+            email: s.guardianEmail || "parent@lionmodekarate.com",
+            cellNumber: s.guardianPhone || "+27 82 555 0192",
+            type: "contact",
+            category: "Nirvash Babuall's Account Contacts"
+          }));
+        break;
+
+      default:
+        break;
+    }
+
+    setSelectedRecipients(prev => {
+      const existingIds = new Set(prev.map(p => p.id));
+      const newlyAdded = additions.filter(a => !existingIds.has(a.id));
+      toast.success(`Added ${newlyAdded.length} recipients from ${categoryKey.replace(/_/g, " ")}`);
+      return [...prev, ...newlyAdded];
+    });
+  };
+
+  // Helper: Remove single recipient chip
+  const removeRecipientChip = (recipientId: string) => {
+    setSelectedRecipients(prev => prev.filter(r => r.id !== recipientId));
+  };
+
+  // Helper: Insert template text
+  const applyMessageTemplate = (templateTitle: string) => {
+    setShowTemplatesDropdown(false);
+    if (templateTitle === "grading") {
+      setMessageSubject("Lion Mode Karate - Official Belt Grading Eligibility & Schedule");
+      setMessageBody(
+        `Dear %FIRST_NAME% and Parents,\n\nOsu!\n\nWe are pleased to inform you that %FIRST_NAME% (%BELT_RANK%) has completed the required attendance requirements and is eligible for the upcoming official Lion Mode Karate Academy grading examination.\n\nDate: Saturday, 28 November 2026\nVenue: Umhlanga Main Tatami Hall\nRequirements: Full white Gi, Academy crest patch, and sparring gear.\n\nPlease confirm registration in your portal at %PORTAL_URL%.\n\nWarm regards,\nSensei Nirvash Babuall\nChief Instructor`
+      );
+    } else if (templateTitle === "tuition") {
+      setMessageSubject("Lion Mode Karate - Monthly Tuition Statement Notice");
+      setMessageBody(
+        `Dear %PARENT_NAME%,\n\nOsu! This is a friendly reminder from Lion Mode Karate Academy regarding monthly karate tuition for %FIRST_NAME%.\n\nInvoices and statements can be viewed and settled securely at %PORTAL_URL% via Instant EFT, PayFast, or Yoco.\n\nThank you for your valued support.\n\nSensei Nirvash Babuall\nLion Mode Dojo Administration`
+      );
+    } else if (templateTitle === "reschedule") {
+      setMessageSubject("Lion Mode Karate - Class Schedule & Mat Notice");
+      setMessageBody(
+        `Dear Athletes and Parents,\n\nOsu!\n\nPlease note a slight schedule adjustment for this week's junior karate sessions. Training will commence at 16:30 sharp on the main tatami.\n\nWarm regards,\nSensei Nirvash Babuall`
+      );
+    } else if (templateTitle === "welcome") {
+      setMessageSubject("Welcome to Lion Mode Karate Academy!");
+      setMessageBody(
+        `Dear %FIRST_NAME%,\n\nWelcome to Lion Mode Karate Academy! We are thrilled to guide you on your martial arts journey.\n\nYour student ID is registered and you can access all training resources, kata videos, and attendance tracking at %PORTAL_URL%.\n\nTrain hard, respect all, and awaken the lion within!\n\nSensei Nirvash Babuall\n5th Dan Chief Instructor`
+      );
+    }
+    toast.success("Applied email template.");
+  };
+
+  // Helper: Dispatch Email or SMS
+  const handleSendEmailOrSms = async () => {
+    const hasChips = selectedRecipients.length > 0;
+    const hasExtra = extraRecipients.trim().length > 0;
+    if (!hasChips && !hasExtra) {
+      toast.error("Please select one or more recipients before sending.");
+      return;
+    }
+    if (messageChannel === "email" && !messageSubject.trim()) {
+      toast.error("Please provide an email subject line.");
+      return;
+    }
+    if (!messageBody.trim()) {
+      toast.error("Please provide a message body.");
+      return;
+    }
+
+    const totalCount = selectedRecipients.length + (hasExtra ? extraRecipients.split(";").filter(Boolean).length : 0);
+
+    await sendMessage({
+      subject: messageChannel === "email" ? messageSubject : "LMK SMS Broadcast",
+      body: messageBody,
+      channel: messageChannel,
+      recipientFilter: `${totalCount} Recipients (${selectedRecipients.map(r => r.name).slice(0, 3).join(", ")}${selectedRecipients.length > 3 ? "..." : ""})`,
+      recipientCount: totalCount,
+      status: "delivered"
+    });
+
+    toast.success(
+      messageChannel === "email"
+        ? `✅ Successfully sent BCC Email to ${totalCount} recipients!`
+        : `✅ Successfully dispatched SMS blast to ${totalCount} cell numbers!`,
+      {
+        description: `Delivered via AthletaOffice Gateway from ${messageSender}`
+      }
+    );
+
+    // Reset composer and return to clients roster
+    setMessageSubject("");
+    setMessageBody("");
+    setExtraRecipients("");
+    setSelectedRecipients([]);
+    setActivePage("clients");
+    window.location.hash = "clients";
+  };
 
   const [newEventForm, setNewEventForm] = useState({
     title: "",
@@ -342,7 +737,7 @@ export default function AthletaOffice() {
   }>({
     channel: "email",
     recipientFilter: "All Active Clients (28)",
-    subject: "AthletaDesk Lion Mode Notification",
+    subject: "AthletaOffice Lion Mode Notification",
     body: "Dear Athletes and Parents,\n\nThis is an official notice from Lion Mode Karate Academy. Please check your schedule in the portal.\n\nOsu,\nNirvash Babuall"
   });
 
@@ -461,18 +856,16 @@ export default function AthletaOffice() {
           </Link>
         </div>
 
-        {/* AthletaDesk Logo Header with Lime Accent (#84CC16) */}
+        {/* AthletaOffice Logo Header with Lion Crest & Lime Accent (#84CC16) */}
         <div className="p-4 flex items-center gap-3 border-b border-[#26343F]">
-          <div className="w-8 h-8 rounded-lg bg-[#84CC16] flex items-center justify-center text-black font-black text-lg tracking-tighter shrink-0 shadow-sm">
-            <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-            </svg>
+          <div className="w-8 h-8 rounded-lg bg-black/60 border border-[#84CC16]/50 flex items-center justify-center shrink-0 shadow-sm overflow-hidden p-0.5">
+            <img src="/lion-crest.png" alt="Lion Crest" className="w-full h-full object-contain" />
           </div>
           {!sidebarCollapsed && (
             <div className="truncate">
               <div className="flex items-center gap-1.5">
                 <span className="font-bold text-sm tracking-widest text-white uppercase font-mono">
-                  ATHLETA<span className="text-[#84CC16]">DESK</span>
+                  ATHLETA<span className="text-[#84CC16]">OFFICE</span>
                 </span>
               </div>
               <span className="text-[10px] text-slate-400 block tracking-wider">Lion Mode Dojo ERP</span>
@@ -583,12 +976,12 @@ export default function AthletaOffice() {
           <div className="bg-[#ECFCCB] text-[#365314] px-4 md:px-8 py-2.5 flex items-center justify-between text-xs border-b border-[#D9F99D] shrink-0">
             <div className="flex items-center gap-2">
               <span className="font-bold bg-[#84CC16] text-black w-4 h-4 rounded-full flex items-center justify-center text-[10px]">!</span>
-              <span>Let's get everything ready so you can start using AthletaDesk</span>
+              <span>Let's get everything ready so you can start using AthletaOffice</span>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={async () => {
-                  const toastId = toast.loading("Downloading lionmode-karate-update-v3.zip (17.8 MB)...");
+                  const toastId = toast.loading("Downloading lionmode-karate-update-v3.zip (3.8 MB)...");
                   try {
                     const res = await fetch("/lionmode-karate-update-v3.zip");
                     if (!res.ok) throw new Error("File not found");
@@ -610,7 +1003,7 @@ export default function AthletaOffice() {
                 title="Download production ZIP archive for cPanel extraction"
               >
                 <Download className="w-3.5 h-3.5 text-[#84CC16]" />
-                <span className="hidden sm:inline">cPanel Build ZIP (17.8 MB)</span>
+                <span className="hidden sm:inline">cPanel Build ZIP (3.8 MB)</span>
               </button>
               <button
                 onClick={() => setShowGettingStartedModal(true)}
@@ -625,13 +1018,23 @@ export default function AthletaOffice() {
           </div>
         )}
 
-        {/* AthletaDesk Top Navigation Bar */}
+        {/* AthletaOffice Top Navigation Bar */}
         <header className="h-14 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-xs">
-          {/* Left: Page Title */}
+          {/* Left: Page Title / Breadcrumb */}
           <div className="flex items-center gap-2 text-slate-800">
             {activePage === "home" && <Home className="w-4 h-4 text-slate-500" />}
             {activePage === "trainers" && <Users className="w-4 h-4 text-slate-500" />}
             {activePage === "clients" && <Users className="w-4 h-4 text-slate-500" />}
+            {(activePage === "message" || activePage === "messaging") && (
+              <button 
+                onClick={() => setActivePage("clients")}
+                className="flex items-center gap-1 text-slate-600 hover:text-slate-900 font-medium transition-colors cursor-pointer mr-1"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Clients</span>
+                <span className="text-slate-400 mx-1">&gt;</span>
+              </button>
+            )}
             {activePage === "calendar" && <Calendar className="w-4 h-4 text-slate-500" />}
             {activePage === "resources" && <Folder className="w-4 h-4 text-slate-500" />}
             {activePage === "invoices" && <CreditCard className="w-4 h-4 text-slate-500" />}
@@ -644,12 +1047,12 @@ export default function AthletaOffice() {
             {activePage === "profile" && <Users className="w-4 h-4 text-slate-500" />}
             {activePage === "grading" && <Award className="w-4 h-4 text-purple-600" />}
             {activePage === "kiosk" && <Smartphone className="w-4 h-4 text-amber-600" />}
-            {activePage === "messaging" && <Send className="w-4 h-4 text-blue-600" />}
 
             <h1 className="text-base font-bold capitalize text-slate-900 tracking-tight">
               {activePage === "home" ? "Home" :
                activePage === "trainers" ? "Trainers & Staff" :
                activePage === "clients" ? "Clients" :
+               activePage === "message" || activePage === "messaging" ? "Message" :
                activePage === "calendar" ? "Calendar" :
                activePage === "resources" ? "Online Resources" :
                activePage === "invoices" ? "Accounts & Invoices" :
@@ -751,7 +1154,7 @@ export default function AthletaOffice() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900 tracking-tight">Let's get started, Nirvash!</h2>
-                  <p className="text-xs text-slate-500">Welcome to your Lion Mode AthletaDesk command dashboard</p>
+                  <p className="text-xs text-slate-500">Welcome to your Lion Mode AthletaOffice command dashboard</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button 
@@ -1042,13 +1445,34 @@ export default function AthletaOffice() {
                     <Plus className="w-3.5 h-3.5" /> + Add Client
                   </button>
                   <button
-                    onClick={() => setActivePage("messaging")}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium cursor-pointer"
+                    onClick={() => {
+                      setActivePage("message");
+                      window.location.hash = "message";
+                    }}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   >
-                    ✉️ Messaging ▼
+                    <Mail className="w-3.5 h-3.5 text-[#84CC16]" />
+                    <span>✉️ Message / New Email</span>
                   </button>
-                  <button className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium cursor-pointer">
-                    ⚙️ Actions ▼
+                  <button
+                    onClick={() => {
+                      const csvContent = "data:text/csv;charset=utf-8," + 
+                        ["First Name,Last Name,Student ID,Belt Rank,Program,Email,Cell Number,Guardian Name,Guardian Email,Guardian Phone"]
+                        .concat(data.students.map(s => `"${s.firstName}","${s.lastName}","${s.studentIdCode}","${s.rankLevel}","${s.trainingProgram}","${s.email || ''}","${s.cellNumber || ''}","${s.guardianName || ''}","${s.guardianEmail || ''}","${s.guardianPhone || ''}"`))
+                        .join("\n");
+                      const encodedUri = encodeURI(csvContent);
+                      const link = document.createElement("a");
+                      link.setAttribute("href", encodedUri);
+                      link.setAttribute("download", "athletaoffice_clients_roster.csv");
+                      document.body.appendChild(link);
+                      link.click();
+                      link.remove();
+                      toast.success("Exported client roster to CSV!");
+                    }}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Export CSV</span>
                   </button>
                 </div>
 
@@ -1064,13 +1488,57 @@ export default function AthletaOffice() {
                 </div>
               </div>
 
-              {/* Clients Roster Table with Photo Uploads */}
+              {/* Sticky Bulk Selection Action Bar */}
+              {selectedClientIds.length > 0 && (
+                <div className="bg-[#1A232A] text-white p-3 rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-md border border-[#84CC16]/30">
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="w-6 h-6 rounded-full bg-[#84CC16] text-black font-black flex items-center justify-center text-xs">
+                      {selectedClientIds.length}
+                    </span>
+                    <span className="font-semibold text-slate-200">
+                      {selectedClientIds.length} client{selectedClientIds.length > 1 ? "s" : ""} selected for bulk action
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <button
+                      onClick={() => handleBulkClientsMessage("email")}
+                      className="px-3 py-1.5 rounded-lg bg-[#84CC16] hover:bg-[#6ea017] text-white font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>✉ Send Bulk Email (BCC)</span>
+                    </button>
+                    <button
+                      onClick={() => handleBulkClientsMessage("sms")}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span>📱 Send Bulk SMS</span>
+                    </button>
+                    <button
+                      onClick={() => setSelectedClientIds([])}
+                      className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white font-medium cursor-pointer"
+                    >
+                      Deselect
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Clients Roster Table with Photo Uploads & Contact Fields */}
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead className="bg-[#F8FAFC] text-slate-500 uppercase tracking-wider text-[11px] border-y border-slate-200">
                     <tr>
-                      <th className="p-3 w-8"><input type="checkbox" className="accent-[#84CC16]" /></th>
-                      <th className="p-3">Photo / Client Name</th>
+                      <th className="p-3 w-8">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedClientIds.length > 0 && selectedClientIds.length === filteredStudents.length}
+                          onChange={toggleSelectAllClients}
+                          className="accent-[#84CC16] cursor-pointer" 
+                          title="Select all clients"
+                        />
+                      </th>
+                      <th className="p-3">Photo / Client Name & Contact</th>
                       <th className="p-3">Student Number</th>
                       <th className="p-3">Belt Rank</th>
                       <th className="p-3">Program</th>
@@ -1081,15 +1549,22 @@ export default function AthletaOffice() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredStudents.map(student => (
-                      <tr key={student.id} className="hover:bg-slate-50">
-                        <td className="p-3"><input type="checkbox" className="accent-[#84CC16]" /></td>
+                      <tr key={student.id} className={`hover:bg-slate-50 transition-colors ${selectedClientIds.includes(student.id) ? "bg-lime-50/50" : ""}`}>
+                        <td className="p-3">
+                          <input 
+                            type="checkbox" 
+                            checked={selectedClientIds.includes(student.id)}
+                            onChange={() => toggleSelectClient(student.id)}
+                            className="accent-[#84CC16] cursor-pointer" 
+                          />
+                        </td>
                         <td className="p-3">
                           <div className="flex items-center gap-3">
                             <div className="relative group/avatar shrink-0">
                               <img
                                 src={student.photoURL}
                                 alt={student.firstName}
-                                className="w-9 h-9 rounded-full object-cover border border-slate-200"
+                                className="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-2xs"
                               />
                               <button
                                 onClick={() => triggerUploadPhoto(student.id)}
@@ -1102,11 +1577,21 @@ export default function AthletaOffice() {
                             <div>
                               <button
                                 onClick={() => setSelectedStudent(student)}
-                                className="font-bold text-slate-900 hover:text-[#84CC16] text-left block cursor-pointer"
+                                className="font-bold text-slate-900 hover:text-[#84CC16] text-left block cursor-pointer text-sm"
                               >
                                 {student.firstName} {student.lastName}
                               </button>
-                              <span className="text-[10px] text-slate-400">DOB: {student.dob}</span>
+                              <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                                <span className="flex items-center gap-1 text-slate-600 truncate max-w-[140px]" title={student.email}>
+                                  <Mail className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                  <span className="truncate">{student.email || `${student.firstName.toLowerCase()}@lionmodekarate.com`}</span>
+                                </span>
+                                <span>•</span>
+                                <span className="flex items-center gap-1 text-slate-600">
+                                  <Smartphone className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                  <span>{student.cellNumber || student.phone || "+27 82 555 0192"}</span>
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -1132,13 +1617,21 @@ export default function AthletaOffice() {
 
                         <td className="p-3">
                           <div className="flex flex-wrap items-center gap-1">
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                              student.status === "active" ? "bg-emerald-100 text-emerald-800" :
+                              student.status === "trial" ? "bg-blue-100 text-blue-800" :
+                              student.status === "pending_approval" ? "bg-amber-100 text-amber-800" :
+                              "bg-slate-100 text-slate-700"
+                            }`}>
+                              {student.status === "pending_approval" ? "Waitlist" : student.status}
+                            </span>
                             {student.unsignedWaiver && (
-                              <span className="px-1.5 py-0.2 rounded text-[9px] bg-rose-100 text-rose-800 font-bold">
+                              <span className="px-1.5 py-0.5 rounded text-[9px] bg-rose-100 text-rose-800 font-bold">
                                 ⚠️ Waiver
                               </span>
                             )}
                             {student.tags.map((t, idx) => (
-                              <span key={idx} className="px-1.5 py-0.2 rounded text-[9px] bg-slate-100 text-slate-700 font-bold">
+                              <span key={idx} className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-700 font-bold">
                                 {t}
                               </span>
                             ))}
@@ -1146,12 +1639,28 @@ export default function AthletaOffice() {
                         </td>
 
                         <td className="p-3 text-right">
-                          <button
-                            onClick={() => setSelectedStudent(student)}
-                            className="px-2.5 py-1 rounded-md bg-[#84CC16]/10 text-[#65A30D] hover:bg-[#84CC16]/20 font-bold text-xs cursor-pointer"
-                          >
-                            Profile
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleSingleClientMessage(student, "email")}
+                              className="p-1.5 rounded-md hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"
+                              title={`Send Email to ${student.firstName}`}
+                            >
+                              <Mail className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleSingleClientMessage(student, "sms")}
+                              className="p-1.5 rounded-md hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer"
+                              title={`Send SMS to ${student.firstName}`}
+                            >
+                              <Smartphone className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setSelectedStudent(student)}
+                              className="px-2.5 py-1 rounded-md bg-[#84CC16]/10 text-[#65A30D] hover:bg-[#84CC16]/20 font-bold text-xs cursor-pointer ml-1"
+                            >
+                              Profile
+                            </button>
+                          </div>
                         </td>
 
                       </tr>
@@ -2654,83 +3163,543 @@ export default function AthletaOffice() {
           )}
 
           {/* ----------------------------------------------------------- */}
-          {/* 16. BROADCAST MESSAGING (Dojo Extension)                    */}
+          {/* 16. EXACT 1:1 NEW EMAIL / CLIENTS > MESSAGE (Screenshot 3)  */}
           {/* ----------------------------------------------------------- */}
-          {activePage === "messaging" && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
-              <div className="border-b pb-3">
-                <h3 className="font-bold text-slate-900 text-sm">Multi-Channel Broadcast Composer</h3>
-                <p className="text-xs text-slate-500">Dispatch Push Notifications, Email Blasts & SMS to enrolled clients</p>
+          {(activePage === "message" || activePage === "messaging") && (
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-xs space-y-6 max-w-5xl">
+              
+              {/* Breadcrumb matching Screenshot 3: ← Clients > Message */}
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2 text-slate-600 text-sm font-medium">
+                  <button 
+                    onClick={() => {
+                      setActivePage("clients");
+                      window.location.hash = "clients";
+                    }}
+                    className="flex items-center gap-1.5 hover:text-slate-900 transition-colors cursor-pointer font-bold text-slate-800"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-slate-600" />
+                    <span>Clients</span>
+                  </button>
+                  <span className="text-slate-400 font-normal">&gt;</span>
+                  <span className="text-slate-900 font-bold">Message</span>
+                </div>
+
+                {/* Delivery Channel Switcher (Email vs SMS) */}
+                <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg text-xs font-bold">
+                  <button
+                    onClick={() => setMessageChannel("email")}
+                    className={`px-3 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                      messageChannel === "email" 
+                        ? "bg-white text-slate-900 shadow-2xs" 
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    <Mail className="w-3.5 h-3.5 text-[#84CC16]" />
+                    <span>Email (BCC)</span>
+                  </button>
+                  <button
+                    onClick={() => setMessageChannel("sms")}
+                    className={`px-3 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                      messageChannel === "sms" 
+                        ? "bg-white text-slate-900 shadow-2xs" 
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>SMS / WhatsApp</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-4 max-w-xl text-xs">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-slate-600 font-bold mb-1">Delivery Channel</label>
-                    <select
-                      value={broadcastForm.channel}
-                      onChange={e => setBroadcastForm({ ...broadcastForm, channel: e.target.value as any })}
-                      className="w-full p-2.5 rounded-lg border border-slate-200 outline-none"
-                    >
-                      <option value="email">Email Blast</option>
-                      <option value="sms">SMS Text Message</option>
-                      <option value="whatsapp">WhatsApp Business</option>
-                      <option value="in_app">In-App Push Notification</option>
-                    </select>
-                  </div>
+              {/* Page Heading */}
+              <div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                  {messageChannel === "email" ? "New Email" : "New SMS Broadcast"}
+                </h2>
+              </div>
 
-                  <div>
-                    <label className="block text-slate-600 font-bold mb-1">Recipient Group</label>
+              {/* Form Fields matching Screenshot 3 */}
+              <div className="space-y-5 text-xs">
+                
+                {/* 1. FROM DROPDOWN */}
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">From</label>
+                  <div className="relative">
                     <select
-                      value={broadcastForm.recipientFilter}
-                      onChange={e => setBroadcastForm({ ...broadcastForm, recipientFilter: e.target.value })}
-                      className="w-full p-2.5 rounded-lg border border-slate-200 outline-none"
+                      value={messageSender}
+                      onChange={e => setMessageSender(e.target.value)}
+                      className="w-full p-2.5 pr-8 rounded-lg border border-slate-200 text-xs bg-white text-slate-800 outline-none appearance-none focus:border-[#84CC16]"
                     >
-                      <option>All Active Clients (28)</option>
-                      <option>Parents & Guardians (22)</option>
-                      <option>Overdue Accounts (2)</option>
-                      <option>Grading Candidates (3)</option>
+                      <option value="Nirvash Babuall <babuvash@gmail.com>">Nirvash Babuall &lt;babuvash@gmail.com&gt;</option>
+                      <option value="Lion Mode Karate Academy <info@lionmodekarate.com>">Lion Mode Karate Academy &lt;info@lionmodekarate.com&gt;</option>
+                      <option value="Sensei Nirvash Office <sensei@lionmodekarate.com>">Sensei Nirvash Office &lt;sensei@lionmodekarate.com&gt;</option>
                     </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
                   </div>
                 </div>
 
+                {/* 2. TO SECTION WITH SELECT... DROPDOWN */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-slate-700">To</span>
+                      <p className="text-[11px] text-slate-500">Multiple recipients are automatically BCC'ed.</p>
+                    </div>
+
+                    {/* Green Select... Dropdown Button (Screenshot 3) */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setRecipientSelectMenuOpen(!recipientSelectMenuOpen)}
+                        className="text-[#84CC16] hover:text-[#6ea017] font-bold text-xs flex items-center gap-1 cursor-pointer py-1 px-2 rounded hover:bg-lime-50 transition-colors"
+                      >
+                        <span>Select...</span>
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${recipientSelectMenuOpen ? "rotate-180" : ""}`} />
+                      </button>
+
+                      {/* Dropdown Menu (Screenshot 3) */}
+                      {recipientSelectMenuOpen && (
+                        <div className="absolute right-0 top-full mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-40 text-xs divide-y divide-slate-100">
+                          
+                          {/* Client Categories */}
+                          <div className="py-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("active_clients")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between"
+                            >
+                              <span>Active Clients</span>
+                              <span className="text-[10px] text-slate-400 font-mono">({data.students.filter(s => s.status === "active").length})</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("trial_clients")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between"
+                            >
+                              <span>Trial Clients</span>
+                              <span className="text-[10px] text-slate-400 font-mono">({data.students.filter(s => s.status === "trial").length})</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("inactive_clients")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between"
+                            >
+                              <span>Inactive Clients</span>
+                              <span className="text-[10px] text-slate-400 font-mono">({data.students.filter(s => s.status === "inactive" || s.status === "suspended").length})</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("waiting_clients")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between"
+                            >
+                              <span>Waiting Clients</span>
+                              <span className="text-[10px] text-slate-400 font-mono">({data.students.filter(s => s.status === "pending_approval").length})</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("lead_clients")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between"
+                            >
+                              <span>Lead Clients</span>
+                              <span className="text-[10px] text-slate-400 font-mono">({data.students.filter(s => s.tags?.some(t => t.toUpperCase().includes("LEAD") || t.toUpperCase().includes("TRIAL"))).length})</span>
+                            </button>
+                          </div>
+
+                          {/* Account Contact Categories */}
+                          <div className="py-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("active_contacts")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer"
+                            >
+                              Active Account Contacts
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("trial_contacts")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer"
+                            >
+                              Trial Account Contacts
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("inactive_contacts")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer"
+                            >
+                              Inactive Account Contacts
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("waiting_contacts")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer"
+                            >
+                              Waiting Account Contacts
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("lead_contacts")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer"
+                            >
+                              Lead Account Contacts
+                            </button>
+                          </div>
+
+                          {/* Trainers & Specific Trainer Contacts */}
+                          <div className="py-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("trainers")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer"
+                            >
+                              Trainers (Staff)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("nirvash_clients")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer"
+                            >
+                              Nirvash Babuall's Clients
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("nirvash_contacts")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-slate-50 text-slate-700 hover:text-slate-900 cursor-pointer"
+                            >
+                              Nirvash Babuall's Account Contacts
+                            </button>
+                          </div>
+
+                          {/* Clear Selection */}
+                          <div className="py-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRecipientCategory("clear")}
+                              className="w-full text-left px-4 py-1.5 hover:bg-rose-50 text-rose-600 font-medium cursor-pointer"
+                            >
+                              Clear Selection
+                            </button>
+                          </div>
+
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Show all clients and trainers checkbox */}
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={showAllClientsInRecipientsList}
+                      onChange={e => setShowAllClientsInRecipientsList(e.target.checked)}
+                      className="accent-[#84CC16] w-4 h-4 rounded"
+                    />
+                    <span>Show all clients and trainers (includes inactive, waiting, and lead) in this list</span>
+                  </label>
+
+                  {/* Interactive Chips Container */}
+                  <div className="min-h-[48px] p-2 rounded-lg border border-slate-200 bg-white flex flex-wrap items-center gap-1.5 focus-within:border-[#84CC16] transition-colors relative">
+                    {selectedRecipients.map(r => (
+                      <span
+                        key={r.id}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 border border-slate-200 text-slate-800 text-xs font-medium"
+                      >
+                        <span className="truncate max-w-[220px]">
+                          {r.name} &lt;{messageChannel === "email" ? r.email : (r.cellNumber || r.email)}&gt;
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeRecipientChip(r.id)}
+                          className="text-slate-400 hover:text-slate-800 cursor-pointer font-bold ml-0.5"
+                          title="Remove recipient"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+
+                    {/* Inline recipient search / filter input */}
+                    <input
+                      type="text"
+                      value={recipientSearchInput}
+                      onChange={e => setRecipientSearchInput(e.target.value)}
+                      placeholder={selectedRecipients.length === 0 ? "Type to search clients or trainers to add..." : "Add another..."}
+                      className="text-xs outline-none p-1 flex-1 min-w-[180px] text-slate-800"
+                    />
+
+                    {/* Autocomplete Search Dropdown */}
+                    {recipientSearchInput.trim().length > 0 && (
+                      <div className="absolute left-0 top-full mt-1 w-full max-h-48 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-40 divide-y divide-slate-100">
+                        {data.students
+                          .filter(s => 
+                            `${s.firstName} ${s.lastName}`.toLowerCase().includes(recipientSearchInput.toLowerCase()) ||
+                            (s.email && s.email.toLowerCase().includes(recipientSearchInput.toLowerCase())) ||
+                            (s.cellNumber && s.cellNumber.includes(recipientSearchInput))
+                          )
+                          .slice(0, 8)
+                          .map(s => (
+                            <button
+                              key={s.id}
+                              type="button"
+                              onClick={() => {
+                                if (!selectedRecipients.some(r => r.id === s.id)) {
+                                  setSelectedRecipients(prev => [
+                                    ...prev,
+                                    {
+                                      id: s.id,
+                                      name: `${s.firstName} ${s.lastName}`,
+                                      email: s.email || `${s.firstName.toLowerCase()}@lionmodekarate.com`,
+                                      cellNumber: s.cellNumber || "+27 82 555 0192",
+                                      type: "client",
+                                      category: s.status
+                                    }
+                                  ]);
+                                }
+                                setRecipientSearchInput("");
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center justify-between text-xs cursor-pointer"
+                            >
+                              <div>
+                                <span className="font-bold text-slate-900">{s.firstName} {s.lastName}</span>
+                                <span className="text-slate-400 ml-2">({s.email || `${s.firstName.toLowerCase()}@lionmodekarate.com`})</span>
+                              </div>
+                              <span className="text-[10px] text-emerald-600 font-medium">{s.cellNumber || "+27 82 555 0192"}</span>
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Red validation warning matching Screenshot 3 when empty */}
+                  {selectedRecipients.length === 0 && !extraRecipients && (
+                    <p className="text-[11px] text-rose-600 flex items-center gap-1 font-medium pt-0.5">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>Please select one or more {messageChannel === "email" ? "email" : "SMS"} recipients</span>
+                    </p>
+                  )}
+                </div>
+
+                {/* 3. EXTRA RECIPIENTS SECTION (Screenshot 3) */}
                 <div>
-                  <label className="block text-slate-600 font-bold mb-1">Subject</label>
+                  <label className="block text-slate-700 font-bold mb-0.5">Extra Recipients</label>
+                  <p className="text-[11px] text-slate-500 mb-1.5">
+                    Use a semicolon or press the Enter key to add recipients who are not in AthletaOffice
+                  </p>
                   <input
                     type="text"
-                    value={broadcastForm.subject}
-                    onChange={e => setBroadcastForm({ ...broadcastForm, subject: e.target.value })}
-                    className="w-full p-2.5 rounded-lg border border-slate-200 outline-none"
+                    value={extraRecipients}
+                    onChange={e => setExtraRecipients(e.target.value)}
+                    placeholder="parent.external@gmail.com; sensei.visiting@karatedojo.co.za"
+                    className="w-full p-2.5 rounded-lg border border-slate-200 outline-none text-xs focus:border-[#84CC16]"
                   />
                 </div>
 
+                {/* 4. SUBJECT (Screenshot 3) */}
+                {messageChannel === "email" && (
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">Subject</label>
+                    <input
+                      type="text"
+                      value={messageSubject}
+                      onChange={e => setMessageSubject(e.target.value)}
+                      placeholder="e.g. Official Belt Grading Schedule & Syllabus"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 outline-none text-xs focus:border-[#84CC16] font-medium"
+                    />
+                  </div>
+                )}
+
+                {/* 5. MESSAGE COMPOSER & RICH TOOLBAR (Screenshot 3) */}
                 <div>
-                  <label className="block text-slate-600 font-bold mb-1">Message Body</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-slate-700 font-bold">Message</label>
+
+                    {/* Template Picker */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowTemplatesDropdown(!showTemplatesDropdown)}
+                        className="text-[#84CC16] hover:text-[#6ea017] font-bold text-xs flex items-center gap-1 cursor-pointer py-0.5 px-2 rounded hover:bg-lime-50"
+                      >
+                        <Tag className="w-3.5 h-3.5" />
+                        <span>Templates &amp; Tags ▼</span>
+                      </button>
+
+                      {showTemplatesDropdown && (
+                        <div className="absolute right-0 top-full mt-1 w-72 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-40 text-xs divide-y divide-slate-100">
+                          <div className="px-3 py-1 text-[10px] uppercase font-bold text-slate-400">Insert Email Templates</div>
+                          <div className="py-1">
+                            <button
+                              type="button"
+                              onClick={() => applyMessageTemplate("grading")}
+                              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700 cursor-pointer"
+                            >
+                              🥋 Belt Grading Examination Notice
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => applyMessageTemplate("tuition")}
+                              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700 cursor-pointer"
+                            >
+                              💳 Monthly Tuition Reminder
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => applyMessageTemplate("reschedule")}
+                              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700 cursor-pointer"
+                            >
+                              ⏰ Session Rescheduling Notice
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => applyMessageTemplate("welcome")}
+                              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700 cursor-pointer"
+                            >
+                              🦁 Welcome New Karateka to Dojo
+                            </button>
+                          </div>
+                          <div className="px-3 py-2 text-[10px] text-slate-500">
+                            <strong>Supported Merge Tags:</strong><br />
+                            <code>%FIRST_NAME%</code>, <code>%LAST_NAME%</code>, <code>%BELT_RANK%</code>, <code>%PORTAL_URL%</code>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* WYSIWYG Style Formatting Toolbar (Exact 1:1 match to Screenshot 3) */}
+                  <div className="border border-slate-200 rounded-t-lg bg-[#FAFAFA] p-1.5 flex flex-wrap items-center gap-1 border-b-0 text-slate-600">
+                    <button type="button" className="p-1.5 rounded hover:bg-slate-200 cursor-pointer" title="Paragraph Format">
+                      <Type className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="h-4 w-px bg-slate-300 mx-0.5" />
+                    <button 
+                      type="button" 
+                      onClick={() => setMessageBody(prev => prev + "**bold**")} 
+                      className="p-1.5 rounded hover:bg-slate-200 cursor-pointer font-bold" 
+                      title="Bold"
+                    >
+                      <Bold className="w-3.5 h-3.5" />
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setMessageBody(prev => prev + "*italic*")} 
+                      className="p-1.5 rounded hover:bg-slate-200 cursor-pointer italic" 
+                      title="Italic"
+                    >
+                      <Italic className="w-3.5 h-3.5" />
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setMessageBody(prev => prev + "_underline_")} 
+                      className="p-1.5 rounded hover:bg-slate-200 cursor-pointer underline" 
+                      title="Underline"
+                    >
+                      <Underline className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="h-4 w-px bg-slate-300 mx-0.5" />
+                    <button type="button" className="p-1.5 rounded hover:bg-slate-200 cursor-pointer" title="Align Left">
+                      <AlignLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" className="p-1.5 rounded hover:bg-slate-200 cursor-pointer" title="Align Center">
+                      <AlignCenter className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" className="p-1.5 rounded hover:bg-slate-200 cursor-pointer" title="Align Right">
+                      <AlignRight className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="h-4 w-px bg-slate-300 mx-0.5" />
+                    <button type="button" onClick={() => setMessageBody(prev => prev + "\n• ")} className="p-1.5 rounded hover:bg-slate-200 cursor-pointer" title="Bulleted List">
+                      <List className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onClick={() => setMessageBody(prev => prev + "\n1. ")} className="p-1.5 rounded hover:bg-slate-200 cursor-pointer" title="Numbered List">
+                      <ListOrdered className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="h-4 w-px bg-slate-300 mx-0.5" />
+                    <button type="button" onClick={() => setMessageBody(prev => prev + " [https://lionmodekarate.com] ")} className="p-1.5 rounded hover:bg-slate-200 cursor-pointer" title="Insert Link">
+                      <Link2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onClick={() => setMessageBody(prev => prev + " [Image: Dojo Logo] ")} className="p-1.5 rounded hover:bg-slate-200 cursor-pointer" title="Insert Image">
+                      <Camera className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onClick={() => setMessageBody(prev => prev + "\n\n| Item | Description |\n| --- | --- |\n| 1 | Belt Syllabus |\n")} className="p-1.5 rounded hover:bg-slate-200 cursor-pointer" title="Insert Table">
+                      <Table className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onClick={() => setMessageBody(prev => prev + " 🥋 Osu! 👍 ")} className="p-1.5 rounded hover:bg-slate-200 cursor-pointer" title="Insert Emoji">
+                      <Smile className="w-3.5 h-3.5 text-amber-500" />
+                    </button>
+                    <div className="h-4 w-px bg-slate-300 mx-0.5" />
+                    <button 
+                      type="button" 
+                      onClick={() => setMessageBody(prev => prev + " %FIRST_NAME% ")} 
+                      className="px-2 py-1 rounded bg-[#84CC16]/10 text-[#65A30D] hover:bg-[#84CC16]/20 font-mono text-[10px] font-bold cursor-pointer"
+                      title="Insert %FIRST_NAME% placeholder"
+                    >
+                      %FIRST_NAME%
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setMessageBody(prev => prev + " %PORTAL_URL% ")} 
+                      className="px-2 py-1 rounded bg-[#84CC16]/10 text-[#65A30D] hover:bg-[#84CC16]/20 font-mono text-[10px] font-bold cursor-pointer"
+                      title="Insert %PORTAL_URL% placeholder"
+                    >
+                      %PORTAL_URL%
+                    </button>
+                  </div>
+
+                  {/* Message Content Area */}
                   <textarea
-                    rows={4}
-                    value={broadcastForm.body}
-                    onChange={e => setBroadcastForm({ ...broadcastForm, body: e.target.value })}
-                    className="w-full p-2.5 rounded-lg border border-slate-200 outline-none"
+                    rows={10}
+                    value={messageBody}
+                    onChange={e => setMessageBody(e.target.value)}
+                    placeholder="Write your email body here... Press %FIRST_NAME% from toolbar to automatically personalize."
+                    className="w-full p-4 rounded-b-lg border border-slate-200 outline-none text-xs leading-relaxed focus:border-[#84CC16] bg-white font-sans text-slate-800"
                   />
+
+                  {/* Character counter for SMS mode */}
+                  {messageChannel === "sms" && (
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1">
+                      <span>SMS Broadcast Mode: Each recipient receives a personalized text on their cell number.</span>
+                      <span className="font-mono font-semibold">
+                        {messageBody.length} / 160 chars ({Math.ceil(messageBody.length / 160) || 1} SMS part)
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                <button
-                  onClick={async () => {
-                    await sendMessage({
-                      subject: broadcastForm.subject,
-                      body: broadcastForm.body,
-                      channel: broadcastForm.channel,
-                      recipientFilter: broadcastForm.recipientFilter,
-                      recipientCount: 28,
-                      status: "delivered"
-                    });
-                    toast.success(`Dispatched ${broadcastForm.channel.toUpperCase()} to ${broadcastForm.recipientFilter}!`);
-                  }}
-                  className="px-5 py-2.5 rounded-xl bg-[#84CC16] hover:bg-[#6ea017] text-white font-bold uppercase text-xs shadow-xs cursor-pointer"
-                >
-                  Send Broadcast
-                </button>
+                {/* 6. BOTTOM ACTION BUTTONS */}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSendEmailOrSms}
+                      className="px-6 py-2.5 rounded-xl bg-[#84CC16] hover:bg-[#6ea017] text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-xs cursor-pointer transition-all hover:scale-[1.01]"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{messageChannel === "email" ? "Send Email" : "Send SMS Broadcast"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => toast.success("Draft saved to AthletaOffice!")}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase cursor-pointer"
+                    >
+                      Save Draft
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivePage("clients");
+                      window.location.hash = "clients";
+                    }}
+                    className="px-4 py-2.5 text-slate-500 hover:text-slate-800 font-bold text-xs uppercase cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
               </div>
+
             </div>
           )}
 
@@ -2835,61 +3804,266 @@ export default function AthletaOffice() {
       {/* MODAL: ADD CLIENT FORM                                        */}
       {/* ============================================================= */}
       {showAddClientModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white rounded-3xl p-6 md:p-8 space-y-4 shadow-2xl border border-slate-200 text-slate-800">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-2xl bg-white rounded-3xl p-6 md:p-8 space-y-5 shadow-2xl border border-slate-200 text-slate-800 my-8 max-h-[90vh] overflow-y-auto">
+            
             <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="font-bold text-lg text-slate-900">Add New Client</h3>
-              <button onClick={() => setShowAddClientModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+              <div>
+                <h3 className="font-black text-xl text-slate-900 tracking-tight">Add New Client</h3>
+                <p className="text-xs text-slate-500">Capture complete client profile, cell number, and email for SMS &amp; bulk messaging</p>
+              </div>
+              <button 
+                onClick={() => setShowAddClientModal(false)} 
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 font-bold mb-1">First Name</label>
-                  <input
-                    type="text"
-                    value={newClientForm.firstName}
-                    onChange={e => setNewClientForm({ ...newClientForm, firstName: e.target.value })}
-                    className="w-full p-2.5 rounded-lg border border-slate-200 outline-none"
-                    placeholder="Liam"
-                  />
+            <div className="space-y-4 text-xs">
+              
+              {/* Section 1: Client Personal Details */}
+              <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-100 space-y-3">
+                <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+                  <Users className="w-3.5 h-3.5 text-[#84CC16]" /> Client Identity
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">First Name *</label>
+                    <input
+                      type="text"
+                      value={newClientForm.firstName}
+                      onChange={e => setNewClientForm({ ...newClientForm, firstName: e.target.value })}
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                      placeholder="e.g. Liam"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Last Name *</label>
+                    <input
+                      type="text"
+                      value={newClientForm.lastName}
+                      onChange={e => setNewClientForm({ ...newClientForm, lastName: e.target.value })}
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                      placeholder="e.g. Botha"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-slate-600 font-bold mb-1">Last Name</label>
-                  <input
-                    type="text"
-                    value={newClientForm.lastName}
-                    onChange={e => setNewClientForm({ ...newClientForm, lastName: e.target.value })}
-                    className="w-full p-2.5 rounded-lg border border-slate-200 outline-none"
-                    placeholder="Botha"
-                  />
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Date of Birth</label>
+                    <input
+                      type="date"
+                      value={newClientForm.dob}
+                      onChange={e => setNewClientForm({ ...newClientForm, dob: e.target.value })}
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Gender</label>
+                    <select
+                      value={newClientForm.gender}
+                      onChange={e => setNewClientForm({ ...newClientForm, gender: e.target.value })}
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Status</label>
+                    <select
+                      value={newClientForm.status}
+                      onChange={e => setNewClientForm({ ...newClientForm, status: e.target.value as any })}
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                    >
+                      <option value="active">Active Client</option>
+                      <option value="trial">Trial Client</option>
+                      <option value="pending_approval">Waiting / Waitlist</option>
+                      <option value="inactive">Inactive Client</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 font-bold mb-1">Date of Birth</label>
+              {/* Section 2: Contact Numbers & Email for SMS & Email */}
+              <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-100 space-y-3">
+                <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+                  <Mail className="w-3.5 h-3.5 text-blue-600" /> Direct Communication (Linked to SMS &amp; Email)
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Client Email Address</label>
+                    <div className="relative">
+                      <input
+                        type="email"
+                        value={newClientForm.email}
+                        onChange={e => setNewClientForm({ ...newClientForm, email: e.target.value })}
+                        placeholder="client@lionmodekarate.com"
+                        className="w-full p-2.5 pl-8 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                      />
+                      <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Cell / Mobile (For SMS)</label>
+                    <div className="relative">
+                      <input
+                        type="tel"
+                        value={newClientForm.cellNumber}
+                        onChange={e => setNewClientForm({ ...newClientForm, cellNumber: e.target.value })}
+                        placeholder="+27 82 123 4567"
+                        className="w-full p-2.5 pl-8 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                      />
+                      <Smartphone className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Telephone / Landline</label>
+                    <div className="relative">
+                      <input
+                        type="tel"
+                        value={newClientForm.phone}
+                        onChange={e => setNewClientForm({ ...newClientForm, phone: e.target.value })}
+                        placeholder="+27 31 555 0192"
+                        className="w-full p-2.5 pl-8 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                      />
+                      <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Training Program & Belt Rank */}
+              <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-100 space-y-3">
+                <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+                  <Award className="w-3.5 h-3.5 text-amber-500" /> Program, Rank &amp; Instructor
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Training Program</label>
+                    <select
+                      value={newClientForm.trainingProgram}
+                      onChange={e => setNewClientForm({ ...newClientForm, trainingProgram: e.target.value })}
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                    >
+                      <option>Little Lions (Ages 8–12)</option>
+                      <option>Lionmode Kids (Ages 3–8)</option>
+                      <option>Lionmode Teens (Ages 13–18)</option>
+                      <option>Adult Traditional Karate</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Current Belt Rank</label>
+                    <select
+                      value={newClientForm.beltRank}
+                      onChange={e => setNewClientForm({ ...newClientForm, beltRank: e.target.value })}
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                    >
+                      <option>White Belt (9th Kyu)</option>
+                      <option>Yellow Belt (8th Kyu)</option>
+                      <option>Orange Belt (7th Kyu)</option>
+                      <option>Green Belt (6th Kyu)</option>
+                      <option>Blue Belt (5th Kyu)</option>
+                      <option>Purple Belt (4th Kyu)</option>
+                      <option>Brown Belt (3rd Kyu)</option>
+                      <option>Black Belt (1st Dan Shodan)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Assigned Instructor</label>
+                    <select
+                      value={newClientForm.assignedInstructor}
+                      onChange={e => setNewClientForm({ ...newClientForm, assignedInstructor: e.target.value })}
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                    >
+                      <option>Nirvash Babuall</option>
+                      <option>Kevin Moodley</option>
+                      <option>Amanda Govender</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 4: Parent / Account Contact (For Minors & Billing) */}
+              <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-100 space-y-3">
+                <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+                  <CreditCard className="w-3.5 h-3.5 text-purple-600" /> Account Contact / Guardian (Billing &amp; Notices)
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Guardian Full Name</label>
+                    <input
+                      type="text"
+                      value={newClientForm.guardianName}
+                      onChange={e => setNewClientForm({ ...newClientForm, guardianName: e.target.value })}
+                      placeholder="e.g. Johan Botha"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Guardian Email</label>
+                    <input
+                      type="email"
+                      value={newClientForm.guardianEmail}
+                      onChange={e => setNewClientForm({ ...newClientForm, guardianEmail: e.target.value })}
+                      placeholder="johan.botha@gmail.com"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 font-bold mb-1">Guardian Cell Phone</label>
+                    <input
+                      type="tel"
+                      value={newClientForm.guardianPhone}
+                      onChange={e => setNewClientForm({ ...newClientForm, guardianPhone: e.target.value })}
+                      placeholder="+27 82 999 1234"
+                      className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 5: Address & Medical Notes */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-600 font-bold mb-1">Physical Street Address</label>
                   <input
-                    type="date"
-                    value={newClientForm.dob}
-                    onChange={e => setNewClientForm({ ...newClientForm, dob: e.target.value })}
-                    className="w-full p-2.5 rounded-lg border border-slate-200 outline-none"
+                    type="text"
+                    value={newClientForm.streetAddress}
+                    onChange={e => setNewClientForm({ ...newClientForm, streetAddress: e.target.value })}
+                    placeholder="14 Palm Boulevard, Umhlanga"
+                    className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-600 font-bold mb-1">Program</label>
-                  <select
-                    value={newClientForm.trainingProgram}
-                    onChange={e => setNewClientForm({ ...newClientForm, trainingProgram: e.target.value })}
-                    className="w-full p-2.5 rounded-lg border border-slate-200 outline-none"
-                  >
-                    <option>Little Lions (Ages 8–12)</option>
-                    <option>Lionmode Kids (Ages 3–8)</option>
-                    <option>Lionmode Teens (Ages 13–18)</option>
-                    <option>Adult Traditional Karate</option>
-                  </select>
+                  <label className="block text-slate-600 font-bold mb-1">City &amp; Postal Code</label>
+                  <input
+                    type="text"
+                    value={`${newClientForm.city}, ${newClientForm.postalCode}`}
+                    onChange={e => {
+                      const parts = e.target.value.split(",");
+                      setNewClientForm({
+                        ...newClientForm,
+                        city: parts[0]?.trim() || "Durban",
+                        postalCode: parts[1]?.trim() || "4319"
+                      });
+                    }}
+                    placeholder="Durban, 4319"
+                    className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
+                  />
                 </div>
               </div>
 
@@ -2899,8 +4073,8 @@ export default function AthletaOffice() {
                   rows={2}
                   value={newClientForm.medicalNotes}
                   onChange={e => setNewClientForm({ ...newClientForm, medicalNotes: e.target.value })}
-                  placeholder="Allergies, chronic conditions, injuries"
-                  className="w-full p-2.5 rounded-lg border border-slate-200 outline-none"
+                  placeholder="Allergies, chronic conditions, prior knee/wrist injury, etc."
+                  className="w-full p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-[#84CC16]"
                 />
               </div>
 
@@ -2909,41 +4083,93 @@ export default function AthletaOffice() {
                   type="checkbox"
                   checked={newClientForm.signedWaiver}
                   onChange={e => setNewClientForm({ ...newClientForm, signedWaiver: e.target.checked })}
-                  className="accent-[#84CC16] w-4 h-4"
+                  className="accent-[#84CC16] w-4 h-4 rounded"
                 />
-                <span className="text-slate-700 font-medium">Digital Indemnity Waiver On File</span>
+                <span className="text-slate-700 font-semibold">Digital Indemnity Waiver On File (Verified by Sensei)</span>
               </label>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t">
-              <button onClick={() => setShowAddClientModal(false)} className="px-4 py-2 text-slate-500 font-bold text-xs uppercase cursor-pointer">
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+              <button 
+                type="button"
+                onClick={() => setShowAddClientModal(false)} 
+                className="px-4 py-2.5 text-slate-500 hover:text-slate-800 font-bold text-xs uppercase cursor-pointer"
+              >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={async () => {
-                  if (!newClientForm.firstName || !newClientForm.lastName) {
-                    toast.error("Please provide first and last name.");
+                  if (!newClientForm.firstName.trim() || !newClientForm.lastName.trim()) {
+                    toast.error("Please provide both first name and last name.");
                     return;
                   }
+                  
+                  const clientEmail = newClientForm.email.trim() || `${newClientForm.firstName.toLowerCase()}@lionmodekarate.com`;
+                  const clientCell = newClientForm.cellNumber.trim() || "+27 82 555 0192";
+
                   await addStudent({
-                    firstName: newClientForm.firstName,
-                    lastName: newClientForm.lastName,
+                    firstName: newClientForm.firstName.trim(),
+                    lastName: newClientForm.lastName.trim(),
                     dob: newClientForm.dob,
+                    gender: newClientForm.gender,
+                    status: newClientForm.status,
+                    rankLevel: newClientForm.beltRank,
                     trainingProgram: newClientForm.trainingProgram,
+                    assignedInstructor: newClientForm.assignedInstructor,
+                    email: clientEmail,
+                    cellNumber: clientCell,
+                    phone: newClientForm.phone.trim() || "+27 31 555 0192",
+                    guardianName: newClientForm.guardianName.trim() || `${newClientForm.lastName} Family Guardian`,
+                    guardianEmail: newClientForm.guardianEmail.trim() || "parent@lionmodekarate.com",
+                    guardianPhone: newClientForm.guardianPhone.trim() || clientCell,
+                    streetAddress: newClientForm.streetAddress,
+                    city: newClientForm.city,
+                    postalCode: newClientForm.postalCode,
                     medicalInfo: {
                       conditions: newClientForm.medicalNotes,
                       allergies: "None",
                       injuries: "None",
                       signedWaiver: newClientForm.signedWaiver
                     },
-                    unsignedWaiver: !newClientForm.signedWaiver
+                    unsignedWaiver: !newClientForm.signedWaiver,
+                    tags: [newClientForm.status.toUpperCase(), "NEW CLIENT"]
                   });
-                  toast.success(`Added ${newClientForm.firstName} ${newClientForm.lastName}!`);
+
+                  toast.success(`✓ Added ${newClientForm.firstName} ${newClientForm.lastName} to AthletaOffice!`, {
+                    description: `Linked cell ${clientCell} and email ${clientEmail} for messaging.`
+                  });
+                  
+                  // Reset form
+                  setNewClientForm({
+                    firstName: "",
+                    lastName: "",
+                    dob: "2016-04-15",
+                    gender: "Male",
+                    familyId: "FAM-001",
+                    trainingProgram: "Little Lions (Ages 8–12)",
+                    assignedInstructor: "Nirvash Babuall",
+                    medicalNotes: "None",
+                    signedWaiver: true,
+                    email: "",
+                    cellNumber: "",
+                    phone: "",
+                    status: "active",
+                    beltRank: "White Belt (9th Kyu)",
+                    guardianName: "",
+                    guardianEmail: "",
+                    guardianPhone: "",
+                    streetAddress: "14 Palm Boulevard, Umhlanga",
+                    city: "Durban",
+                    postalCode: "4319"
+                  });
+
                   setShowAddClientModal(false);
                 }}
-                className="px-5 py-2.5 rounded-xl bg-[#84CC16] hover:bg-[#6ea017] text-white font-bold text-xs uppercase cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-[#84CC16] hover:bg-[#6ea017] text-white font-bold text-xs uppercase cursor-pointer shadow-xs flex items-center gap-1.5 transition-all hover:scale-[1.01]"
               >
-                Save Client
+                <Check className="w-4 h-4" />
+                <span>Save Client</span>
               </button>
             </div>
 
@@ -3321,7 +4547,7 @@ export default function AthletaOffice() {
 
             <div className="space-y-3 text-xs text-slate-700">
               <p>
-                Two-Factor Authentication adds an extra layer of security to your AthletaDesk and Lion Mode account.
+                Two-Factor Authentication adds an extra layer of security to your AthletaOffice and Lion Mode account.
               </p>
 
               {userProfile.twoFactorEnabled ? (
