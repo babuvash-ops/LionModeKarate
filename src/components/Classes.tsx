@@ -429,9 +429,10 @@ export default function Classes({ user, profile }: ClassesProps) {
   return (
     <div className="space-y-12 pb-32 bg-background min-h-screen">
       <HeroBanner
+        slot="hero_classes"
         image="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1400&q=80"
-        title="TRAINING_ROTATIONS"
-        subtitle="Tactical school calendar and session reservations network"
+        title="Class Schedule"
+        subtitle="Daily dojo training sessions and belt-specific classes"
       />
 
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-12">

@@ -25,9 +25,11 @@ import GoldButton from "../components/shared/GoldButton";
 import BeltBadge from "../components/shared/BeltBadge";
 import { useAuth } from "@/lib/AuthContext";
 import { DUMMY_STUDENTS } from "@/data/dummyData";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 export default function Dashboard() {
   const { isParent, authorizedStudentId, profile, user } = useAuth();
+  const content = useSiteContent();
 
   const { data: students = [] } = useQuery({ 
     queryKey: ["students"], 
@@ -63,6 +65,23 @@ export default function Dashboard() {
         />
 
         <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
+          {/* Sensei Daily Announcement from CMS */}
+          {content.app.senseiQuote && (
+            <div className="p-4 sm:p-5 rounded-3xl bg-[#D4AF37]/5 border border-[#D4AF37]/30 flex items-center gap-3.5 backdrop-blur-xl">
+              <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/30 shrink-0">
+                <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+              </div>
+              <div>
+                <span className="text-[10px] font-heading uppercase tracking-widest text-[#D4AF37] block font-bold">
+                  Daily Dojo Announcement • Sensei Babu
+                </span>
+                <p className="text-sm text-gray-200 font-body italic mt-0.5">
+                  "{content.app.senseiQuote}"
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Privacy & Student ID Badge */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
             <div className="flex items-center gap-3.5">
@@ -260,6 +279,22 @@ export default function Dashboard() {
     <div>
       <HeroBanner slot="hero_dashboard" title="Command Center" subtitle="Your dojo operations at a glance" />
       <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
+        {/* Sensei Daily Announcement from CMS */}
+        {content.app.senseiQuote && (
+          <div className="p-4 sm:p-5 rounded-3xl bg-[#D4AF37]/5 border border-[#D4AF37]/30 flex items-center gap-3.5 backdrop-blur-xl">
+            <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/30 shrink-0">
+              <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+            </div>
+            <div>
+              <span className="text-[10px] font-heading uppercase tracking-widest text-[#D4AF37] block font-bold">
+                Daily Dojo Announcement • Sensei Babu
+              </span>
+              <p className="text-sm text-gray-200 font-body italic mt-0.5">
+                "{content.app.senseiQuote}"
+              </p>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <StatCard icon={Users} label="Active Students" value={activeStudents} trend="+12% this month" />
           <StatCard icon={DollarSign} label="Revenue" value={`R ${totalRevenue.toLocaleString()}`} />

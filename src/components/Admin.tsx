@@ -31,7 +31,8 @@ import {
   Server,
   ArrowRight,
   Key,
-  Download
+  Download,
+  Type
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,6 +40,8 @@ import HeroBanner from "./shared/HeroBanner";
 import StatCard from "./shared/StatCard";
 import GoldButton from "./shared/GoldButton";
 import StudentIdManager from "./admin/StudentIdManager";
+import SiteContentManager from "./admin/SiteContentManager";
+import SiteImageManager from "./admin/SiteImageManager";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
@@ -71,7 +74,7 @@ const CHART_COLORS = [
 export default function Admin() {
   const images = useSiteImages();
   const { activePersona, switchPersona } = useAuth();
-  const [activeTab, setActiveTab] = useState<"analytics" | "student_ids" | "domain" | "images" | "funnels" | "personas">("analytics");
+  const [activeTab, setActiveTab] = useState<"analytics" | "content" | "images" | "student_ids" | "domain" | "funnels" | "personas">("analytics");
 
   // Domain setup state
   const [domainMode, setDomainMode] = useState<"subdomain" | "root">("subdomain");
@@ -84,6 +87,31 @@ export default function Admin() {
     setCopiedField(label);
     toast.success(`Copied ${label} to clipboard!`);
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false);
+  const handleDownloadZip = async () => {
+    setIsDownloadingZip(true);
+    const toastId = toast.loading("Preparing fresh production build package (17.8 MB)...");
+    try {
+      const res = await fetch("/lionmode-karate-update-v3.zip");
+      if (!res.ok) throw new Error("Build package not found");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "lionmode-karate-update-v3.zip";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+      toast.success("✓ Download started! Check your computer's Downloads folder.", { id: toastId });
+    } catch (err: any) {
+      toast.error("Opening download fallback page...", { id: toastId });
+      window.location.href = "/download";
+    } finally {
+      setIsDownloadingZip(false);
+    }
   };
 
   // Funnels state
@@ -181,14 +209,45 @@ export default function Admin() {
       />
 
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
+        {/* AthletaOffice Interconnected Dojo Management Launcher Banner */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-transparent border border-[#D4AF37]/30 p-6 md:p-8 backdrop-blur-xl">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#FFB800] text-xs font-heading uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Interconnected Dojo ERP System</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-heading uppercase tracking-wider text-white">
+                AthletaOffice <span className="text-[#D4AF37]">Business Management</span>
+              </h2>
+              <p className="text-sm font-body text-white/70 leading-relaxed">
+                Complete all-in-one dojo management suite modeled after AthletaDesk: Fast-tap mat attendance roll call, student & family CRM, kiosk PIN check-in, automated belt grading eligibility, ZAR invoicing ledger, multi-trainer permissions, automations & pro shop inventory tracking.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                to="/admin/athleta-office"
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#FFB800] text-black font-heading font-bold text-sm uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-[#D4AF37]/25 cursor-pointer"
+                id="btn-athleta-office"
+              >
+                <Sparkles className="w-5 h-5 text-black" />
+                <span>Open AthletaOffice</span>
+                <ArrowRight className="w-4 h-4 text-black" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Navigation Tabs & Production ZIP Download Bar */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar p-1.5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
             {[
               { id: "analytics", label: "Dojo Analytics & KPIs", icon: BarChart3 },
+              { id: "content", label: "Website & App Text (CMS)", icon: Type },
+              { id: "images", label: "Image Assets & Photos", icon: ImageIcon },
               { id: "student_ids", label: "Student IDs & Member Registrations", icon: Key },
               { id: "domain", label: "Custom Domain & DNS", icon: Globe },
-              { id: "images", label: "Website Images (lionmodekarate.com)", icon: ImageIcon },
               { id: "funnels", label: "Marketing Funnels & Leads", icon: Layers },
               { id: "personas", label: "Test Personas (Admin / Staff / Parent)", icon: ShieldCheck }
             ].map(tab => {
@@ -211,15 +270,15 @@ export default function Admin() {
             })}
           </div>
 
-          <a
-            href="/dojo-app-build.zip"
-            download="dojo-app-build.zip"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#FFB800] text-black text-xs font-heading font-bold uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all shadow-lg shrink-0 cursor-pointer self-start lg:self-center"
-            title="Download full web server deployment ZIP (dojo-app-build.zip)"
+          <button
+            onClick={handleDownloadZip}
+            disabled={isDownloadingZip}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#FFB800] text-black text-xs font-heading font-bold uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all shadow-lg shrink-0 cursor-pointer self-start lg:self-center disabled:opacity-50"
+            title="Download full web server deployment ZIP (lionmode-karate-update-v3.zip)"
           >
             <Download className="w-4 h-4 text-black" />
-            <span>Download Production ZIP (13.3 MB)</span>
-          </a>
+            <span>{isDownloadingZip ? "Preparing..." : "Download Production ZIP (17.8 MB)"}</span>
+          </button>
         </div>
 
         {/* TAB: STUDENT IDS & MEMBER REGISTRATIONS */}
@@ -661,123 +720,14 @@ export default function Admin() {
           </div>
         )}
 
-        {/* TAB 2: WEBSITE IMAGES MANAGER (Changeable in Admin Section) */}
+        {/* TAB: WEBSITE & APP TEXT CMS */}
+        {activeTab === "content" && (
+          <SiteContentManager />
+        )}
+
+        {/* TAB 2: WEBSITE IMAGES & PHOTOS MANAGER */}
         {activeTab === "images" && (
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/[0.02] border border-white/10 p-6 rounded-3xl">
-              <div>
-                <div className="flex items-center gap-2 text-[#D4AF37] text-xs font-heading uppercase tracking-widest mb-1">
-                  <ImageIcon className="w-4 h-4" />
-                  <span>Media Assets Control • https://lionmodekarate.com</span>
-                </div>
-                <h2 className="font-heading text-2xl font-bold uppercase tracking-wider text-white">
-                  Website & App Image Assets Manager
-                </h2>
-                <p className="text-sm text-white/60 font-body max-w-2xl mt-1">
-                  All images loaded from your customer's website (https://lionmodekarate.com) are placed throughout the Home Page, Banners, and App Sections. You can preview, change, or update any image URL below, and changes persist immediately.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleResetImages}
-                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-heading uppercase tracking-wider text-white/70 hover:text-white flex items-center gap-2 transition-all cursor-pointer"
-                >
-                  <RotateCcw className="w-4 h-4 text-amber-400" />
-                  <span>Reset to Lion Mode Defaults</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Images Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {SITE_IMAGE_SLOTS.map((slot) => {
-                const currentUrl = imageInputs[slot.key] !== undefined ? imageInputs[slot.key] : (images[slot.key] || slot.defaultUrl);
-                const isModified = imageInputs[slot.key] && imageInputs[slot.key] !== (images[slot.key] || slot.defaultUrl);
-
-                return (
-                  <div
-                    key={slot.key}
-                    className="bg-white/[0.03] border border-white/10 hover:border-[#D4AF37]/40 rounded-3xl overflow-hidden backdrop-blur-xl transition-all flex flex-col justify-between group shadow-xl"
-                  >
-                    <div>
-                      {/* Image Preview */}
-                      <div className="relative h-44 bg-black overflow-hidden border-b border-white/10">
-                        <img
-                          src={currentUrl}
-                          alt={slot.label}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          onError={(e) => {
-                            e.currentTarget.src = slot.defaultUrl;
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-                        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md text-[10px] font-heading uppercase tracking-wider text-[#D4AF37] border border-[#D4AF37]/30">
-                          {slot.category}
-                        </span>
-                        <a
-                          href={currentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="absolute top-3 right-3 p-1.5 rounded-lg bg-black/60 text-white/70 hover:text-white hover:bg-black/90 transition-all"
-                          title="View Full Image"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      </div>
-
-                      {/* Content & Inputs */}
-                      <div className="p-5 space-y-3">
-                        <div>
-                          <h4 className="font-heading text-lg font-bold uppercase text-white truncate">
-                            {slot.label}
-                          </h4>
-                          <p className="text-xs text-white/50 font-body line-clamp-2 mt-0.5">
-                            {slot.description}
-                          </p>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-heading uppercase tracking-widest text-white/50">
-                            Image URL / Source:
-                          </label>
-                          <input
-                            type="text"
-                            value={currentUrl}
-                            onChange={(e) => setImageInputs({ ...imageInputs, [slot.key]: e.target.value })}
-                            className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white font-mono placeholder:text-white/30 focus:outline-none focus:border-[#D4AF37]"
-                            placeholder="https://..."
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bottom Save Action */}
-                    <div className="p-5 pt-0 flex items-center justify-between gap-3">
-                      <button
-                        onClick={() => {
-                          setImageInputs({ ...imageInputs, [slot.key]: slot.defaultUrl });
-                          handleSaveImage(slot.key);
-                        }}
-                        className="text-[11px] text-white/40 hover:text-white font-body underline cursor-pointer"
-                      >
-                        Restore Default
-                      </button>
-
-                      <button
-                        onClick={() => handleSaveImage(slot.key)}
-                        disabled={savingKey === slot.key}
-                        className="px-4 py-2 rounded-xl bg-[#D4AF37] hover:bg-[#FFB800] text-black text-xs font-heading uppercase tracking-wider font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-[#D4AF37]/20"
-                      >
-                        <Save className="w-3.5 h-3.5" />
-                        <span>{savingKey === slot.key ? "Saving..." : "Save Image"}</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <SiteImageManager />
         )}
 
         {/* TAB 3: MARKETING FUNNELS (Controlled in Admin Section) */}

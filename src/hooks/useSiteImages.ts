@@ -1,5 +1,5 @@
 // Lion Mode Karate Academy (https://lionmodekarate.com)
-// Dynamic Site Image Assets with Admin Customization & Cloud Sync
+// Dynamic Site Image Assets with Admin Customization, Photo Uploading, and Cloud Sync
 
 import { useState, useEffect } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -148,7 +148,49 @@ export const SITE_IMAGE_SLOTS: SiteImageSlot[] = [
 ];
 
 const LOCAL_STORAGE_KEY = "lionmode_site_images_v2";
+const LOCAL_META_KEY = "lionmode_site_images_meta_v2";
 const FIRESTORE_DOC_PATH = "site_settings/images";
+const FIRESTORE_META_DOC_PATH = "site_settings/images_meta";
+
+/**
+ * Resizes and compresses an uploaded image file into an optimized JPEG Data URL.
+ * Prevents exceeding Firestore and browser storage quotas while preserving high visual fidelity.
+ */
+export async function processImageFile(file: File, maxDimension = 1400, quality = 0.82): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error("Unable to parse image file"));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error("Unable to read file"));
+    reader.readAsDataURL(file);
+  });
+}
 
 export function getInitialSiteImages(): Record<string, string> {
   const result: Record<string, string> = {};
@@ -161,7 +203,6 @@ export function getInitialSiteImages(): Record<string, string> {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Ensure hero_background uses the beach and sky karate photo as requested
         if (parsed.hero_background && parsed.hero_background.includes("Samurai-Kimura-Karate-Do-Durban")) {
           parsed.hero_background = "https://images.unsplash.com/photo-1555597673-b21d5c935865?auto=format&fit=crop&w=2000&q=85";
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parsed));
@@ -170,6 +211,27 @@ export function getInitialSiteImages(): Record<string, string> {
       }
     } catch (e) {
       console.warn("Could not read site images from localStorage", e);
+    }
+  }
+
+  return result;
+}
+
+export function getInitialSiteImagesMeta(): Record<string, { label: string; description: string }> {
+  const result: Record<string, { label: string; description: string }> = {};
+  SITE_IMAGE_SLOTS.forEach(slot => {
+    result[slot.key] = { label: slot.label, description: slot.description };
+  });
+
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem(LOCAL_META_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        Object.assign(result, parsed);
+      }
+    } catch (e) {
+      console.warn("Could not read image meta from localStorage", e);
     }
   }
 
@@ -187,7 +249,6 @@ export function useSiteImages() {
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("lionmode_images_updated", handleStorageChange);
 
-    // Also attempt to load from Firestore once on mount
     const fetchRemote = async () => {
       try {
         const docRef = doc(db, FIRESTORE_DOC_PATH);
@@ -218,17 +279,86 @@ export function useSiteImages() {
   return images;
 }
 
-export async function saveSiteImage(key: string, url: string): Promise<void> {
+export function useSiteImageDetails() {
+  const [images, setImages] = useState<Record<string, string>>(getInitialSiteImages);
+  const [meta, setMeta] = useState<Record<string, { label: string; description: string }>>(getInitialSiteImagesMeta);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setImages(getInitialSiteImages());
+      setMeta(getInitialSiteImagesMeta());
+    };
+
+    window.addEventListener("storage", handleUpdate);
+    window.addEventListener("lionmode_images_updated", handleUpdate);
+
+    const fetchRemote = async () => {
+      try {
+        const snap = await getDoc(doc(db, FIRESTORE_DOC_PATH));
+        if (snap.exists()) {
+          const remoteData = snap.data();
+          if (remoteData && typeof remoteData === "object") {
+            const merged = { ...getInitialSiteImages(), ...remoteData };
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged));
+            setImages(merged);
+          }
+        }
+
+        const metaSnap = await getDoc(doc(db, FIRESTORE_META_DOC_PATH));
+        if (metaSnap.exists()) {
+          const remoteMeta = metaSnap.data();
+          if (remoteMeta && typeof remoteMeta === "object") {
+            const mergedMeta = { ...getInitialSiteImagesMeta(), ...remoteMeta };
+            localStorage.setItem(LOCAL_META_KEY, JSON.stringify(mergedMeta));
+            setMeta(mergedMeta as any);
+          }
+        }
+      } catch (err) {
+        // Fallback silently
+      }
+    };
+    fetchRemote();
+
+    return () => {
+      window.removeEventListener("storage", handleUpdate);
+      window.removeEventListener("lionmode_images_updated", handleUpdate);
+    };
+  }, []);
+
+  return { images, meta };
+}
+
+export async function saveSiteImage(
+  key: string,
+  url: string,
+  customMeta?: { label?: string; description?: string }
+): Promise<void> {
   try {
     const current = getInitialSiteImages();
     current[key] = url;
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(current));
+
+    if (customMeta) {
+      const currentMeta = getInitialSiteImagesMeta();
+      currentMeta[key] = {
+        label: customMeta.label || currentMeta[key]?.label || key,
+        description: customMeta.description !== undefined ? customMeta.description : currentMeta[key]?.description || ""
+      };
+      localStorage.setItem(LOCAL_META_KEY, JSON.stringify(currentMeta));
+    }
+
     window.dispatchEvent(new Event("lionmode_images_updated"));
 
     // Save to Firestore
     try {
       const docRef = doc(db, FIRESTORE_DOC_PATH);
       await setDoc(docRef, current, { merge: true });
+
+      if (customMeta) {
+        const metaDocRef = doc(db, FIRESTORE_META_DOC_PATH);
+        const currentMeta = getInitialSiteImagesMeta();
+        await setDoc(metaDocRef, currentMeta, { merge: true });
+      }
     } catch (firestoreErr) {
       console.warn("Could not persist to Firestore, cached in localStorage", firestoreErr);
     }
@@ -238,19 +368,28 @@ export async function saveSiteImage(key: string, url: string): Promise<void> {
   }
 }
 
+export async function removeSiteImage(key: string): Promise<void> {
+  // Clear the image URL or set to placeholder
+  await saveSiteImage(key, "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'><rect width='400' height='300' fill='%23111111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23666666' text-anchor='middle' dominant-baseline='middle'>No Image Uploaded</text></svg>");
+}
+
 export async function resetAllSiteImages(): Promise<void> {
   const freshDefaults: Record<string, string> = {};
+  const freshMeta: Record<string, { label: string; description: string }> = {};
+
   SITE_IMAGE_SLOTS.forEach(slot => {
     freshDefaults[slot.key] = slot.defaultUrl;
+    freshMeta[slot.key] = { label: slot.label, description: slot.description };
   });
 
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(freshDefaults));
+  localStorage.setItem(LOCAL_META_KEY, JSON.stringify(freshMeta));
   window.dispatchEvent(new Event("lionmode_images_updated"));
 
   try {
-    const docRef = doc(db, FIRESTORE_DOC_PATH);
-    await setDoc(docRef, freshDefaults);
+    await setDoc(doc(db, FIRESTORE_DOC_PATH), freshDefaults);
+    await setDoc(doc(db, FIRESTORE_META_DOC_PATH), freshMeta);
   } catch (err) {
-    console.warn("Failed to reset Firestore doc:", err);
+    console.warn("Failed to reset Firestore images doc:", err);
   }
 }

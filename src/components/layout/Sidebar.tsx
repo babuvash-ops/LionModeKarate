@@ -39,6 +39,7 @@ const menuGroups = [
     { path: "/events", icon: Calendar, label: "Events" },
   ]},
   { title: "Operations", items: [
+    { path: "/admin/athleta-office", icon: Sparkles, label: "AthletaOffice", badge: "Business" },
     { path: "/classes", icon: LayoutGrid, label: "Classes" },
     { path: "/instructor", icon: BookOpen, label: "Instructor Portal" },
     { path: "/invoices", icon: DollarSign, label: "Invoices" },

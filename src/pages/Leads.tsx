@@ -81,6 +81,7 @@ export default function LeadsPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white pb-32">
       <HeroBanner
+        slot="hero_leads"
         title="Dojo CRM & Lead Pipeline"
         subtitle="Track inbound inquiries from lionmodekarate.com, manage free trial bookings, and convert new martial arts students."
         image="https://images.unsplash.com/photo-1555597673-b21d5c935865?w=1600&q=80"

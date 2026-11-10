@@ -3,3 +3,4 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/lionmod2/public_html/
     - /bin/cp -r * $DEPLOYPATH
+    - /bin/cp -r dist/* $DEPLOYPATH 2>/dev/null || true

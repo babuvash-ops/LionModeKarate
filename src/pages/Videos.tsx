@@ -40,6 +40,7 @@ export default function VideosPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white pb-32">
       <HeroBanner
+        slot="hero_videos"
         title="Curriculum Video Library"
         subtitle="Master traditional Shotokan kata biomechanics, kumite sparring drills, and official belt grading syllabi in high definition."
         image="https://images.unsplash.com/photo-1555597673-b21d5c935865?w=1600&q=80"

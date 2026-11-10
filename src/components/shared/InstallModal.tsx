@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { toast } from 'sonner';
 
 interface InstallModalProps {
   isOpen: boolean;
@@ -459,14 +460,31 @@ IconFile=${targetUrl}favicon.ico
 
           {/* Direct Server ZIP Download */}
           <div className="mt-4 pt-3 border-t border-white/10 text-center">
-            <a
-              href="/dojo-app-build.zip"
-              download="dojo-app-build.zip"
+            <button
+              onClick={async () => {
+                const toastId = toast.loading("Downloading lionmode-karate-update-v3.zip...");
+                try {
+                  const res = await fetch("/lionmode-karate-update-v3.zip");
+                  if (!res.ok) throw new Error("File not found");
+                  const blob = await res.blob();
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "lionmode-karate-update-v3.zip";
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+                  toast.success("✓ Download started! Check your Downloads folder.", { id: toastId });
+                } catch {
+                  window.location.href = "/download";
+                }
+              }}
               className="inline-flex items-center gap-1.5 text-xs text-[#FFB800] hover:text-white font-heading uppercase tracking-wider transition-colors cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Download cPanel ZIP Package (dojo-app-build.zip)</span>
-            </a>
+              <span>Download cPanel ZIP Package (lionmode-karate-update-v3.zip)</span>
+            </button>
           </div>
 
           {/* Footer */}

@@ -1,0 +1,1501 @@
+# MASTER DEVELOPMENT SPECIFICATION
+# DOJO APP – ADVANCED ADMINISTRATION & BUSINESS MANAGEMENT SYSTEM
+
+## PROJECT OBJECTIVE
+
+Upgrade and expand the existing DOJO application by integrating a comprehensive Dojo Business Management System inspired by the operational functionality of AthletaDesk (https://www.athletadesk.com/).
+
+The purpose is to transform DOJO from its current functionality into a complete, interconnected martial arts school management platform.
+
+This is an enhancement of the EXISTING DOJO APPLICATION, NOT a request to create a new application.
+
+The new functionality must be integrated into the existing Admin Section.
+
+IMPORTANT:
+- First inspect the entire existing DOJO application.
+- Identify its current technology stack, framework, database, backend, API structure, authentication system, existing navigation and design system.
+- Inspect all existing Admin pages and existing functionality.
+- Identify which modules already exist and which need to be extended.
+- Reuse existing components, database tables, authentication, services and design conventions wherever possible.
+- Do not duplicate existing functionality.
+- Do not remove, overwrite or break existing features.
+- Do not replace the existing application architecture unnecessarily.
+- Preserve all existing student records and historical data.
+- Implement actual working functionality, not merely static visual screens.
+- Every new feature must integrate with the existing database and backend.
+
+The finished system must be responsive, professional, fast, secure and suitable for desktop, tablet and mobile use.
+
+---
+
+# MODULE 1: ADMIN DASHBOARD
+
+Create an advanced central administration dashboard.
+
+The dashboard must provide a real-time overview of the entire martial arts school.
+
+### Dashboard KPI cards
+
+Display:
+
+1. Total registered students.
+2. Active students.
+3. Inactive students.
+4. New registrations this month.
+5. Trial students.
+6. Students awaiting registration approval.
+7. Total instructors.
+8. Classes scheduled today.
+9. Attendance today.
+10. Monthly membership revenue.
+11. Outstanding payments.
+12. Overdue accounts.
+13. Upcoming grading events.
+14. Upcoming competitions.
+15. Students eligible for grading.
+
+All figures must be retrieved dynamically from the database.
+
+### Dashboard visualisations
+
+Create interactive charts for:
+
+- Student growth over the last 12 months.
+- Monthly revenue.
+- Monthly expenses.
+- Student attendance trends.
+- Attendance by class.
+- Student distribution by belt.
+- Student distribution by age group.
+- Membership status.
+- New registrations versus cancellations.
+- Revenue by membership category.
+
+Allow filtering by:
+- Today.
+- This week.
+- This month.
+- Last month.
+- This quarter.
+- This year.
+- Custom date range.
+
+### Dashboard activity feed
+
+Display recent events:
+
+- New student registrations.
+- New payments.
+- Failed payments.
+- Attendance activity.
+- New grading results.
+- Belt promotions.
+- Membership cancellations.
+- New enquiries.
+- Staff changes.
+
+### Action alerts
+
+Create automatic alerts for:
+
+- Overdue memberships.
+- Failed payments.
+- Students with declining attendance.
+- Students approaching grading eligibility.
+- Membership renewals.
+- Upcoming grading dates.
+- Expiring documents.
+- Classes approaching maximum capacity.
+
+Each alert must link directly to the relevant record.
+
+---
+
+# MODULE 2: STUDENT AND FAMILY CRM
+
+Create a comprehensive student management system.
+
+Each student must have a central profile containing all information relating to that student.
+
+### Student registration
+
+Create a configurable registration form with:
+
+Personal information:
+- First name.
+- Last name.
+- Date of birth.
+- Gender, if required.
+- Student photograph.
+- Email address.
+- Mobile number.
+- Residential address.
+- Registration date.
+- Student ID.
+- Membership status.
+
+Parent/guardian information:
+- Parent/guardian name.
+- Relationship to student.
+- Email.
+- Mobile number.
+- Alternative contact.
+- Emergency contact.
+- Permission to collect the student.
+- Communication preferences.
+
+Medical information:
+- Relevant medical conditions.
+- Allergies.
+- Injuries.
+- Medication information, where voluntarily provided.
+- Emergency medical instructions.
+- Medical clearance documents.
+
+Martial arts information:
+- Martial arts discipline.
+- Current belt.
+- Stripe level.
+- Previous grading date.
+- Next grading eligibility.
+- Assigned instructor.
+- Assigned training programme.
+- Training commencement date.
+- Student notes.
+
+Registration documents:
+- Signed indemnity forms.
+- Waivers.
+- Medical declarations.
+- Registration documents.
+- Identity or supporting documents where required.
+
+All fields must be configurable where practical.
+
+### Student statuses
+
+Create the following lifecycle statuses:
+
+- Lead.
+- Enquiry.
+- Trial.
+- Pending Registration.
+- Active.
+- Suspended.
+- Waiting List.
+- Inactive.
+- Cancelled.
+
+Status changes must be recorded in the student's history.
+
+### Student profile layout
+
+Organise the profile using tabs:
+
+1. Overview.
+2. Personal Information.
+3. Family & Guardians.
+4. Membership.
+5. Attendance.
+6. Belt & Grading History.
+7. Training Progress.
+8. Payments & Invoices.
+9. Documents.
+10. Instructor Notes.
+11. Communication History.
+12. Activity Timeline.
+
+Include quick actions:
+- Edit Student.
+- Record Payment.
+- Take Attendance.
+- Change Membership.
+- Send Message.
+- Register for Grading.
+- Upload Document.
+- Promote Belt.
+- Suspend Account.
+- Deactivate Student.
+
+### Family management
+
+Create family account functionality.
+
+Allow one parent or guardian to manage multiple students.
+
+Requirements:
+- Link siblings under one family account.
+- Maintain separate student profiles.
+- Support family membership plans.
+- Support sibling discounts.
+- Generate consolidated family invoices.
+- Record payments against the family account.
+- Show individual balances and the total household balance.
+- Allow parents to access all linked children's records through one login.
+
+Prevent duplicate student records when the same student attends multiple classes or trains with multiple instructors.
+
+### Import and export
+
+Support:
+- CSV imports.
+- Excel imports where supported.
+- Student bulk registration.
+- Duplicate detection.
+- Import validation.
+- Preview before importing.
+- Import error reporting.
+- Excel and CSV exports.
+
+Never overwrite existing student data without explicit confirmation.
+
+---
+
+# MODULE 3: CLASS MANAGEMENT AND SCHEDULING
+
+Develop a complete scheduling and calendar system.
+
+### Calendar views
+
+Provide:
+- Daily calendar.
+- Weekly calendar.
+- Monthly calendar.
+- Agenda view.
+- Instructor calendar.
+- Venue calendar.
+- Class calendar.
+
+### Class creation
+
+Every class must support:
+
+- Class name.
+- Martial arts style.
+- Description.
+- Training level.
+- Minimum age.
+- Maximum age.
+- Belt eligibility.
+- Instructor.
+- Assistant instructor.
+- Venue.
+- Training room.
+- Start time.
+- End time.
+- Duration.
+- Maximum capacity.
+- Minimum attendance.
+- Class colour.
+- Recurrence.
+- Booking requirements.
+- Class status.
+
+### Recurring scheduling
+
+Support:
+- Daily.
+- Weekly.
+- Selected weekdays.
+- Fortnightly.
+- Monthly.
+- Custom recurrence.
+- Specific start and end dates.
+
+Allow an individual occurrence to be edited without changing the entire recurring schedule.
+
+### Scheduling conflict detection
+
+Automatically detect:
+- Instructor double bookings.
+- Venue double bookings.
+- Room capacity conflicts.
+- Students enrolled in overlapping classes.
+- Classes outside configured operating hours.
+
+Show warnings before saving conflicts.
+
+### Class categories
+
+Allow administrators to configure:
+
+- Beginners.
+- Intermediate.
+- Advanced.
+- Children's classes.
+- Adult classes.
+- Competition training.
+- Sparring.
+- Private lessons.
+- Special workshops.
+- Grading preparation.
+
+### Class bookings
+
+Allow students and parents to:
+- View available classes.
+- Book a class.
+- Cancel a booking.
+- Join a waiting list.
+- View upcoming classes.
+- Receive booking confirmations.
+
+Allow administrators to control booking deadlines, cancellation rules, eligibility and available capacity.
+
+### Events
+
+Support one-off and recurring events such as:
+- Belt grading.
+- Tournaments.
+- Seminars.
+- Workshops.
+- Training camps.
+- Demonstrations.
+- Club meetings.
+
+Each event must support registrations, capacity, fees, attendance and reporting.
+
+---
+
+# MODULE 4: ATTENDANCE MANAGEMENT
+
+Develop a fast and reliable attendance system.
+
+This must be one of the most efficient functions in the entire application.
+
+### Instructor attendance screen
+
+When an instructor opens an assigned class, show:
+
+- Class name.
+- Date and time.
+- Instructor.
+- Student roster.
+- Student photographs.
+- Current belts.
+- Attendance status.
+- Membership status.
+- Outstanding account warning where the instructor is authorised to see it.
+
+Provide large, easy-to-use attendance buttons.
+
+### Attendance statuses
+
+Support:
+- Present.
+- Absent.
+- Late.
+- Excused.
+- Cancelled.
+- Make-up class.
+
+### Attendance methods
+
+Implement:
+- Manual instructor check-in.
+- Administrator check-in.
+- Student self-check-in.
+- QR code check-in.
+- PIN-based check-in.
+- Reception kiosk mode.
+
+QR codes and PINs must be securely associated with individual students.
+
+Prevent duplicate attendance records for the same student and class occurrence.
+
+### Attendance history
+
+Store:
+- Student.
+- Class.
+- Date.
+- Time.
+- Attendance status.
+- Recorded by.
+- Check-in method.
+- Any instructor notes.
+
+### Attendance analytics
+
+Calculate:
+- Total classes attended.
+- Classes missed.
+- Attendance percentage.
+- Attendance by month.
+- Attendance by programme.
+- Consecutive absences.
+- Attendance trends.
+
+### Absence automation
+
+Create configurable rules such as:
+
+- Notify an instructor when a student misses multiple classes.
+- Notify a parent when a child has not attended for a configurable period.
+- Flag students whose attendance is declining.
+- Generate an administrator follow-up task.
+
+Never automatically cancel a membership solely because of missed attendance.
+
+---
+
+# MODULE 5: BELT RANK, GRADING AND CURRICULUM
+
+Create a complete martial arts progression management system.
+
+### Configurable belt systems
+
+Allow administrators to create custom martial arts ranking structures.
+
+Support:
+- Different martial arts disciplines.
+- Multiple belt systems.
+- Coloured belts.
+- Intermediate belts.
+- Stripes.
+- Dan grades.
+- Custom ranks.
+- Custom promotion sequences.
+
+Do not hardcode a single martial arts ranking system.
+
+### Belt configuration
+
+Each rank should contain:
+- Belt name.
+- Belt colour.
+- Rank sequence.
+- Associated discipline.
+- Required minimum training period.
+- Minimum attendance.
+- Required stripes.
+- Required curriculum milestones.
+- Grading fee.
+- Certificate template.
+
+### Student progression
+
+For every student calculate:
+
+- Current rank.
+- Date of last promotion.
+- Time at current rank.
+- Number of classes attended since promotion.
+- Required attendance.
+- Required training duration.
+- Completed curriculum requirements.
+- Outstanding requirements.
+- Grading eligibility.
+
+### Grading eligibility engine
+
+Automatically evaluate student eligibility using configurable rules.
+
+Example:
+
+A student becomes eligible when:
+- Minimum time at current belt has been completed.
+- Required attendance has been achieved.
+- Required curriculum has been completed.
+- Required instructor approval has been obtained.
+
+Show:
+- Eligible.
+- Nearly eligible.
+- Not eligible.
+
+Display exactly which requirements remain incomplete.
+
+Eligibility does not mean automatic promotion.
+
+### Grading event management
+
+Allow administrators to:
+- Create grading events.
+- Select eligible students.
+- Invite students.
+- Register candidates.
+- Record examination fees.
+- Record attendance.
+- Assign examining instructors.
+- Record pass/fail results.
+- Record grading comments.
+- Upload grading documents.
+
+### Promotion workflow
+
+When a student passes:
+
+1. Record the grading result.
+2. Update their belt.
+3. Record promotion date.
+4. Preserve their complete previous belt history.
+5. Reset applicable attendance counters.
+6. Generate a grading certificate.
+7. Notify the student and parent.
+8. Update their student profile.
+
+Never delete or overwrite historical belt records.
+
+### Curriculum builder
+
+Allow administrators to define techniques and requirements per belt.
+
+Include:
+- Techniques.
+- Forms and katas.
+- Combinations.
+- Fitness requirements.
+- Sparring requirements.
+- Theory.
+- Practical assessment.
+- Instructor sign-off.
+
+Allow instructors to record individual student progress.
+
+---
+
+# MODULE 6: MEMBERSHIP AND BILLING ENGINE
+
+Build a complete membership and financial management system.
+
+This must be designed specifically for martial arts schools.
+
+### Membership plans
+
+Allow administrators to create unlimited configurable plans.
+
+Examples:
+- Monthly membership.
+- Annual membership.
+- Family membership.
+- Children's membership.
+- Adult membership.
+- Unlimited training.
+- Limited weekly classes.
+- Competition programme.
+- Private training.
+
+Each plan must support:
+- Plan name.
+- Description.
+- Price.
+- Billing frequency.
+- Start date.
+- Renewal date.
+- Registration fee.
+- Discount.
+- Included classes.
+- Access restrictions.
+- Cancellation policy.
+- Trial period.
+- Membership status.
+
+### Family memberships
+
+Allow multiple students to be included in one family account.
+
+Support:
+- Sibling discounts.
+- Family pricing.
+- Different membership plans per child.
+- Consolidated billing.
+- Individual student balances.
+
+### Billing functionality
+
+Implement:
+- Recurring monthly billing.
+- Annual billing.
+- Once-off charges.
+- Registration fees.
+- Grading fees.
+- Event fees.
+- Equipment charges.
+- Discounts.
+- Manual adjustments.
+- Credit notes.
+- Refunds.
+
+### Financial accounts
+
+Every student or family must have a financial ledger.
+
+Record:
+- Invoice charges.
+- Payments.
+- Discounts.
+- Refunds.
+- Credits.
+- Adjustments.
+- Outstanding balances.
+
+Display:
+- Opening balance.
+- New charges.
+- Payments received.
+- Credits.
+- Closing balance.
+
+Every transaction must have a date, reference, description and audit history.
+
+### Invoice generation
+
+Generate professional PDF invoices with:
+- Dojo branding.
+- Invoice number.
+- Student/family information.
+- Billing period.
+- Itemised charges.
+- Discounts.
+- Tax information where applicable.
+- Total payable.
+- Payment status.
+- Payment instructions.
+
+Support:
+- Draft.
+- Issued.
+- Partially Paid.
+- Paid.
+- Overdue.
+- Cancelled.
+
+### Payment collection
+
+Provide configurable payment methods:
+- EFT/bank transfer.
+- Cash.
+- Card.
+- Online payment gateway.
+- Manual payment recording.
+
+Design an integration-ready payment gateway architecture suitable for South African providers such as PayFast, Yoco or Peach Payments, subject to API availability and merchant credentials.
+
+Stripe may be supported where appropriate.
+
+Never store raw credit card numbers or CVV information.
+
+### Automatic billing
+
+Create a configurable billing scheduler.
+
+Support:
+- Monthly invoice generation.
+- Automatic payment attempts.
+- Payment success notifications.
+- Failed payment alerts.
+- Retry schedules.
+- Overdue reminders.
+- Membership renewal reminders.
+
+Avoid duplicate invoices and duplicate payment attempts through idempotent processing.
+
+### Important billing rule
+
+Membership billing and attendance-based session billing must be separate configurable models.
+
+A student with a fixed monthly membership must not be charged an additional class fee every time attendance is recorded unless an explicit additional charge has been configured.
+
+### Financial dashboard
+
+Show:
+- Total revenue.
+- Collected revenue.
+- Outstanding debtors.
+- Monthly recurring revenue.
+- Failed payments.
+- Membership income.
+- Grading income.
+- Event income.
+- Expenses.
+- Net income.
+
+Provide date filters and downloadable reports.
+
+---
+
+# MODULE 7: COMMUNICATION AND AUTOMATION CENTRE
+
+Create a central communications management system.
+
+### Communication channels
+
+Support integrations for:
+- Email.
+- SMS.
+- WhatsApp Business, through an approved API provider.
+- In-app notifications.
+
+Do not simulate successful delivery when a provider has not confirmed delivery.
+
+### Message templates
+
+Create reusable templates for:
+
+- Welcome messages.
+- Registration confirmations.
+- Trial class invitations.
+- Class reminders.
+- Attendance notifications.
+- Absence follow-ups.
+- Membership renewal reminders.
+- Outstanding payment notices.
+- Payment receipts.
+- Grading invitations.
+- Grading results.
+- Belt promotion announcements.
+- Competition announcements.
+- General club announcements.
+
+### Bulk communication
+
+Allow administrators to select recipients by:
+- All active students.
+- Parents.
+- Instructors.
+- Belt level.
+- Martial arts style.
+- Class.
+- Membership plan.
+- Student status.
+- Location.
+- Outstanding account status.
+
+Provide a preview and recipient count before sending.
+
+### Automation workflow builder
+
+Build a visual automation system.
+
+An automation should consist of:
+
+TRIGGER → CONDITIONS → ACTIONS.
+
+Example workflows:
+
+1. New student registered:
+   - Create student account.
+   - Notify administrator.
+   - Send welcome email.
+   - Send registration instructions.
+   - Create follow-up task.
+
+2. Student misses three classes:
+   - Detect attendance pattern.
+   - Notify instructor.
+   - Create follow-up task.
+   - Notify parent where configured.
+
+3. Membership payment fails:
+   - Record failed payment.
+   - Notify finance administrator.
+   - Send payment reminder.
+   - Schedule a configurable retry.
+
+4. Student becomes grading eligible:
+   - Notify instructor.
+   - Add student to grading eligibility list.
+   - Notify administrator.
+
+5. Grading result recorded as passed:
+   - Update belt.
+   - Generate certificate.
+   - Notify family.
+   - Preserve promotion history.
+
+6. Membership renewal approaching:
+   - Send advance notification.
+   - Create renewal reminder.
+   - Flag overdue renewal if not completed.
+
+Allow administrators to activate, deactivate, edit and test automation workflows.
+
+Maintain an execution history showing success, failure and retry status.
+
+---
+
+# MODULE 8: STAFF AND INSTRUCTOR MANAGEMENT
+
+Create a staff management system.
+
+### Staff profiles
+
+Include:
+- Personal information.
+- Contact details.
+- Photograph.
+- Job title.
+- Martial arts rank.
+- Qualifications.
+- Certification documents.
+- Employment status.
+- Assigned classes.
+- Start date.
+- Emergency contact.
+
+### Staff roles and permissions
+
+Implement role-based access control.
+
+Roles should include:
+- Super Administrator.
+- Dojo Owner.
+- Administrator.
+- Head Instructor.
+- Instructor.
+- Finance Officer.
+- Receptionist.
+
+Permissions must be configurable at module and action level.
+
+Support:
+- View.
+- Create.
+- Edit.
+- Delete.
+- Approve.
+- Export.
+- Financial access.
+- Sensitive student information access.
+
+An instructor should only see the records and information necessary for their duties.
+
+### Payroll
+
+Support:
+- Monthly salaries.
+- Hourly pay.
+- Per-class remuneration.
+- Per-student commission.
+- Event remuneration.
+- Bonuses.
+- Allowances.
+- Deductions.
+
+Calculate payroll for configurable pay periods.
+
+Generate:
+- Payroll summaries.
+- Individual payroll statements.
+- Instructor activity reports.
+- Downloadable records.
+
+Payroll changes must be auditable.
+
+---
+
+# MODULE 9: WEBSITE AND REGISTRATION MANAGEMENT
+
+Create a website administration module.
+
+The administrator must be able to manage the public-facing Dojo website without editing application source code.
+
+### Website configuration
+
+Provide:
+- Logo upload.
+- Branding colours.
+- Homepage content.
+- About page.
+- Programme descriptions.
+- Instructor profiles.
+- Contact details.
+- Timetable.
+- Membership information.
+- News and announcements.
+- Events.
+
+### Online registration
+
+Create configurable registration forms.
+
+Forms must support:
+- Student information.
+- Guardian information.
+- Emergency contacts.
+- Medical declarations.
+- Membership selection.
+- Waiver acceptance.
+- Supporting document uploads.
+
+### Registration workflow
+
+When a person submits a form:
+
+1. Validate the submission.
+2. Check for possible duplicate records.
+3. Create a registration enquiry or pending student.
+4. Notify administrators.
+5. Allow approval or rejection.
+6. Convert approved registrations into active student accounts.
+7. Generate applicable invoices.
+8. Send confirmation and portal access instructions.
+
+### Website widgets
+
+Where possible, provide embeddable:
+- Registration form.
+- Class timetable.
+- Upcoming events.
+- Student login.
+- Contact form.
+
+Ensure public website information comes from the same database as the Admin Section.
+
+---
+
+# MODULE 10: STUDENT AND PARENT PORTAL
+
+Create a secure self-service portal.
+
+Parents should be able to switch between linked children's profiles.
+
+### Parent functionality
+
+- View student information.
+- View membership.
+- View upcoming classes.
+- View attendance history.
+- View current belt.
+- View grading progress.
+- View grading eligibility.
+- View invoices.
+- View payment history.
+- Make payments.
+- Download receipts.
+- Register for events.
+- Receive announcements.
+- Update permitted contact details.
+- Upload requested documents.
+
+### Student functionality
+
+- View personal profile.
+- View timetable.
+- Book eligible classes.
+- Check attendance.
+- View belt progression.
+- View training milestones.
+- View curriculum requirements.
+- View upcoming gradings.
+- Receive notifications.
+
+### Permissions
+
+Parents must only access their linked children's records.
+
+Students must only access their own authorised records.
+
+Sensitive medical information must have stricter access controls.
+
+---
+
+# MODULE 11: EVENTS, TOURNAMENTS AND SEMINARS
+
+Create a dedicated event management system.
+
+Support:
+- Tournaments.
+- Seminars.
+- Grading events.
+- Workshops.
+- Training camps.
+- Demonstrations.
+- Social events.
+
+Each event must support:
+- Name.
+- Description.
+- Event image.
+- Venue.
+- Date.
+- Start and end time.
+- Organiser.
+- Instructor.
+- Registration deadline.
+- Maximum participants.
+- Entry fee.
+- Categories.
+- Participants.
+- Payment status.
+- Attendance.
+- Results.
+
+For competitions, allow:
+- Weight categories where applicable.
+- Age categories.
+- Belt categories.
+- Division.
+- Opponents.
+- Match results.
+- Medal achievements.
+- Tournament history.
+
+Generate event participant lists and financial summaries.
+
+---
+
+# MODULE 12: INVENTORY AND PRODUCT MANAGEMENT
+
+Create an optional but integrated stock management module.
+
+Manage:
+- Uniforms.
+- Belts.
+- Gloves.
+- Protective equipment.
+- Training accessories.
+- Club merchandise.
+- Other products.
+
+Each product must have:
+- Product name.
+- SKU.
+- Category.
+- Size.
+- Colour.
+- Purchase price.
+- Selling price.
+- Stock quantity.
+- Reorder level.
+- Supplier.
+
+Support:
+- Stock adjustments.
+- Sales.
+- Student purchases.
+- Invoice integration.
+- Low-stock alerts.
+- Stock movement history.
+
+---
+
+# MODULE 13: BUSINESS REPORTS AND ANALYTICS
+
+Build a central reporting engine.
+
+All reports must retrieve actual database information.
+
+### Student reports
+- Active students.
+- New students.
+- Student retention.
+- Student cancellations.
+- Student growth.
+- Students by programme.
+- Students by belt.
+- Students by age.
+
+### Attendance reports
+- Daily attendance.
+- Monthly attendance.
+- Attendance by class.
+- Attendance by instructor.
+- Individual attendance.
+- Absentee reports.
+- Attendance trends.
+
+### Financial reports
+- Revenue.
+- Membership income.
+- Outstanding balances.
+- Payment collections.
+- Failed payments.
+- Refunds.
+- Discounts.
+- Expenses.
+- Net income.
+
+### Staff reports
+- Classes taught.
+- Hours worked.
+- Instructor attendance.
+- Payroll.
+- Instructor activity.
+
+### Grading reports
+- Eligible students.
+- Upcoming gradings.
+- Grading attendance.
+- Pass rates.
+- Belt promotions.
+- Promotion history.
+
+### Export functionality
+
+Allow reports to be:
+- Filtered.
+- Sorted.
+- Printed.
+- Downloaded as PDF.
+- Exported to Excel.
+- Exported to CSV.
+
+Provide charts and summary statistics where useful.
+
+---
+
+# MODULE 14: SYSTEM SETTINGS, SECURITY AND INTEGRATIONS
+
+Create a central settings area.
+
+### Dojo configuration
+
+Allow administrators to manage:
+- Dojo name.
+- Logo.
+- Contact information.
+- Address.
+- Training locations.
+- Martial arts disciplines.
+- Belt systems.
+- Class categories.
+- Membership plans.
+- Operating hours.
+- Currency.
+- Time zone.
+- Tax configuration.
+
+Use South African Rand (ZAR) as the default currency, while allowing configuration.
+
+### Integrations
+
+Prepare configurable integrations for:
+- Payment gateways.
+- Email providers.
+- SMS providers.
+- WhatsApp Business API.
+- Google Calendar.
+- Microsoft Outlook.
+- Accounting platforms.
+- External automation services.
+
+### API management
+
+Create secure API infrastructure with:
+- API keys.
+- Access permissions.
+- Authentication.
+- Rate limiting.
+- Webhooks.
+- Integration logs.
+- API activity history.
+
+### Audit trail
+
+Record important actions:
+- User login.
+- Student creation.
+- Student changes.
+- Membership changes.
+- Payment changes.
+- Refunds.
+- Belt promotions.
+- Attendance modifications.
+- Staff permissions changes.
+- Data exports.
+
+Each audit entry should include:
+- User.
+- Action.
+- Record affected.
+- Date and time.
+- Previous value where appropriate.
+- New value where appropriate.
+
+### Security
+
+Implement:
+- Role-based permissions.
+- Secure authentication.
+- Session management.
+- Password reset.
+- Optional multi-factor authentication.
+- Secure file storage.
+- Encrypted sensitive information.
+- Data backups.
+- Audit logging.
+- Rate limiting.
+- Protection against common web vulnerabilities.
+
+Design the system with South African POPIA requirements in mind.
+
+Provide consent management, appropriate access controls, retention policies and secure handling of children's information.
+
+---
+
+# MODULE 15: TECHNICAL ARCHITECTURE AND DATABASE INTEGRATION
+
+This is a critical requirement.
+
+All modules must use a consistent data architecture.
+
+Before building, inspect the existing database and map existing entities.
+
+Do not create duplicate tables or competing records where equivalent structures already exist.
+
+Suggested logical entities include:
+
+- Users
+- Roles
+- Permissions
+- Students
+- Guardians
+- Family Accounts
+- Student Guardians
+- Martial Arts Styles
+- Belt Ranks
+- Student Belt History
+- Curriculum
+- Curriculum Progress
+- Membership Plans
+- Memberships
+- Classes
+- Class Occurrences
+- Class Enrolments
+- Attendance
+- Venues
+- Training Rooms
+- Instructors
+- Instructor Assignments
+- Payroll Records
+- Invoices
+- Invoice Items
+- Payments
+- Transactions
+- Discounts
+- Expenses
+- Events
+- Event Registrations
+- Products
+- Inventory Movements
+- Documents
+- Messages
+- Message Templates
+- Notifications
+- Automation Rules
+- Automation Executions
+- Audit Logs
+- Integration Settings
+- Webhook Events
+
+Use appropriate foreign keys, unique constraints, indexes and transactions.
+
+All financial operations must be atomic and auditable.
+
+Use database transactions for operations involving multiple related records.
+
+Prevent:
+- Duplicate invoices.
+- Duplicate payments.
+- Duplicate attendance.
+- Duplicate student registration.
+- Invalid belt history.
+- Unauthorised financial modifications.
+
+Use background jobs for scheduled billing, reminders, reports and automation.
+
+Implement reliable retries and failure logging.
+
+---
+
+# MODULE 16: USER EXPERIENCE AND INTERFACE DESIGN
+
+The Admin Section must have a professional commercial SaaS appearance.
+
+Do not copy the AthletaDesk interface literally.
+
+Use its operational concepts and build a cohesive DOJO design language.
+
+### Layout
+
+Create:
+- Persistent sidebar navigation.
+- Expandable module menus.
+- Top navigation bar.
+- Global search.
+- Notification centre.
+- User profile menu.
+- Breadcrumb navigation.
+- Responsive content area.
+
+### Design requirements
+
+Use:
+- Modern cards.
+- Clean tables.
+- Interactive charts.
+- Consistent icons.
+- Clear typography.
+- Well-spaced layouts.
+- Professional forms.
+- Searchable dropdowns.
+- Modal dialogs.
+- Confirmation dialogs.
+- Status indicators.
+- Helpful empty states.
+- Loading indicators.
+- Error messages.
+- Success notifications.
+
+### Interaction requirements
+
+Every button must work.
+
+Every form must validate and save.
+
+Every table must retrieve real records.
+
+Every dashboard statistic must be calculated.
+
+Every navigation link must open its intended module.
+
+All filters must work.
+
+All exports must generate actual files.
+
+Do not create non-functional placeholders disguised as completed features.
+
+### Mobile and tablet support
+
+The system must work on:
+- Desktop.
+- Laptop.
+- Tablet.
+- Mobile phone.
+
+Optimise attendance taking and student check-in for tablet use.
+
+---
+
+# MODULE 17: IMPLEMENTATION AND QUALITY ASSURANCE
+
+Do not attempt to create the entire system as disconnected screens.
+
+Implement it in controlled phases.
+
+### Phase 1 – Existing application assessment
+
+- Inspect existing source code.
+- Identify current functionality.
+- Inspect database schema.
+- Map current Admin navigation.
+- Identify reusable components.
+- Prepare a module integration plan.
+
+### Phase 2 – Core administration
+
+Implement:
+- Admin dashboard.
+- Student CRM.
+- Family management.
+- Staff management.
+- Permissions.
+
+### Phase 3 – Daily operations
+
+Implement:
+- Class scheduling.
+- Attendance.
+- Student check-in.
+- Belt management.
+- Grading.
+- Curriculum.
+
+### Phase 4 – Financial management
+
+Implement:
+- Membership plans.
+- Family billing.
+- Invoices.
+- Payments.
+- Debtors.
+- Financial dashboard.
+
+### Phase 5 – Communications
+
+Implement:
+- Email.
+- SMS.
+- Notifications.
+- Message templates.
+- Automation workflows.
+
+### Phase 6 – Portals and website
+
+Implement:
+- Parent portal.
+- Student portal.
+- Online registration.
+- Public timetable.
+- Website administration.
+
+### Phase 7 – Business expansion
+
+Implement:
+- Events.
+- Tournaments.
+- Inventory.
+- Expenses.
+- Payroll.
+- Advanced reporting.
+
+### Phase 8 – Integration and final testing
+
+Test every module and workflow.
+
+Test:
+- User permissions.
+- Student registration.
+- Family account creation.
+- Class booking.
+- Attendance.
+- Grading progression.
+- Membership invoicing.
+- Payment recording.
+- Refunds.
+- Failed payment handling.
+- Notifications.
+- Reporting.
+- Data exports.
+- Mobile responsiveness.
+- Security.
+
+### FINAL ACCEPTANCE CRITERIA
+
+The project is not complete until:
+
+1. Every module is connected to the existing application.
+2. Data is saved and retrieved correctly.
+3. All financial calculations are accurate.
+4. Attendance works correctly.
+5. Student progression is preserved.
+6. Family accounts work correctly.
+7. Permissions are enforced by the backend, not just hidden in the interface.
+8. Notifications and automations execute correctly.
+9. Existing functionality remains intact.
+10. All important actions are auditable.
+11. The interface is fully responsive.
+12. No critical workflows rely on hardcoded demonstration data.
+
+Provide a final implementation report listing:
+- Completed modules.
+- Existing modules reused.
+- Database changes.
+- API changes.
+- New integrations.
+- Features requiring external provider credentials.
+- Known limitations.
+- Outstanding tasks.
+- Testing results.
+
+IMPORTANT FINAL INSTRUCTION:
+
+Build this as an extension of the existing DOJO application.
+
+The result should be a fully interconnected martial arts school management and business administration platform, inspired by the operational capabilities of AthletaDesk but specifically adapted to the requirements of a martial arts dojo.
+
+Prioritise functionality, data integrity, automation, security and usability over superficial visual changes.
+
+Do not claim that a feature is implemented until it has been connected, tested and verified.

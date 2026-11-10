@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useSiteImages } from "@/hooks/useSiteImages";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 export default function HeroBanner({ 
   image, 
@@ -11,7 +12,13 @@ export default function HeroBanner({
   showLogo = true 
 }: any) {
   const images = useSiteImages();
+  const content = useSiteContent();
   const resolved = (slot && (images as any)[slot]) || image;
+  
+  const slotKey = slot ? slot.replace("hero_", "") : "";
+  const effectiveTitle = (slotKey && (content.app as any)?.[`${slotKey}Title`]) || title;
+  const effectiveSubtitle = (slotKey && (content.app as any)?.[`${slotKey}Subtitle`]) || subtitle;
+
   return (
     <div className={`relative w-full ${height} overflow-hidden`}>
       <img src={resolved} alt={title} className="absolute inset-0 w-full h-full object-cover" />
@@ -38,8 +45,8 @@ export default function HeroBanner({
             </div>
           </div>
         )}
-        <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-bold uppercase tracking-wider text-foreground">{title}</h1>
-        {subtitle && <p className="mt-2 text-base md:text-lg text-muted-foreground max-w-xl">{subtitle}</p>}
+        <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-bold uppercase tracking-wider text-foreground">{effectiveTitle}</h1>
+        {effectiveSubtitle && <p className="mt-2 text-base md:text-lg text-muted-foreground max-w-xl">{effectiveSubtitle}</p>}
         {children && <div className="mt-4">{children}</div>}
       </motion.div>
     </div>

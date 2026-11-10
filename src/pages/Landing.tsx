@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Award, Users, Gift, Star, Bot, LogIn, Sparkles, Mail, ShoppingBag, ArrowRight, Check, Download, Smartphone } from "lucide-react";
 import GoldButton from "../components/shared/GoldButton";
 import { useSiteImages } from "@/hooks/useSiteImages";
+import { useSiteContent } from "@/hooks/useSiteContent";
 import { useAuth } from "@/lib/AuthContext";
 import DojoLogo from "@/components/shared/DojoLogo";
 import ChatBotIcon from "@/components/shared/ChatBotIcon";
@@ -23,6 +24,7 @@ const stats = [
 export default function Landing() {
   const navigate = useNavigate();
   const images = useSiteImages();
+  const content = useSiteContent();
   const { user, profile, openAuthModal, signOut } = useAuth();
   const { items: cartItems } = useCart();
   const totalCartCount = cartItems.reduce((acc: number, item: any) => acc + (item.qty || 1), 0);
@@ -126,7 +128,7 @@ export default function Landing() {
               transition={{ duration: 0.7, delay: 0.1 }}
               className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold uppercase leading-[0.95] tracking-tight text-white drop-shadow-md"
             >
-              Forge Your <span className="text-primary">Warrior</span> Spirit
+              {content.hero.headingLine1} <span className="text-primary">{content.hero.headingHighlight}</span> {content.hero.headingLine2}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -134,7 +136,7 @@ export default function Landing() {
               transition={{ duration: 0.7, delay: 0.15 }}
               className="text-sm md:text-base text-gray-200 font-body mt-5 max-w-md drop-shadow-md"
             >
-              Premium martial arts training for all ages. Build discipline, confidence, and strength in our world-class dojo.
+              {content.hero.subtitle}
             </motion.p>
 
             {/* Primary Hero CTAs */}
@@ -145,15 +147,15 @@ export default function Landing() {
               className="flex flex-wrap gap-3.5 justify-center mt-7 items-center"
             >
               <Link to="/trial">
-                <GoldButton size="lg">Book 1-Week Free Trial Pass</GoldButton>
+                <GoldButton size="lg">{content.hero.primaryButtonText}</GoldButton>
               </Link>
               <a href="#programs">
-                <GoldButton variant="outline" size="lg">View Programs</GoldButton>
+                <GoldButton variant="outline" size="lg">{content.hero.secondaryButtonText}</GoldButton>
               </a>
               <Link to="/shop">
                 <GoldButton variant="outline" size="lg" className="flex items-center gap-2 border-[#D4AF37]/50 hover:border-[#D4AF37] hover:bg-[#D4AF37]/10">
                   <ShoppingBag className="w-4 h-4 text-[#D4AF37]" />
-                  <span>Shop Pro Gear</span>
+                  <span>{content.hero.shopButtonText}</span>
                 </GoldButton>
               </Link>
             </motion.div>
@@ -194,8 +196,8 @@ export default function Landing() {
             className="grid grid-cols-2 gap-3 md:gap-4 max-w-md mx-auto w-full"
           >
             {[
-              { icon: Users, value: "500+", label: "Active Members" },
-              { icon: Award, value: "150+", label: "Trophies Won" },
+              { icon: Users, value: content.hero.stat1Value, label: content.hero.stat1Label },
+              { icon: Award, value: content.hero.stat2Value, label: content.hero.stat2Label },
             ].map(({ icon: Icon, value, label }) => (
               <div key={label} className="bg-card/90 backdrop-blur-xl border border-border/50 rounded-2xl py-5 flex flex-col items-center">
                 <Icon className="w-6 h-6 text-primary mb-2" />
@@ -234,13 +236,13 @@ export default function Landing() {
                 <div className="space-y-1.5">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[11px] font-heading uppercase tracking-widest">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    Interactive AI Advisor
+                    {content.senseiAi.badge}
                   </div>
                   <h3 className="font-heading text-2xl sm:text-3xl font-bold uppercase tracking-wide text-white">
-                    Sensei <span className="text-[#D4AF37]">AI Hub</span>
+                    {content.senseiAi.title} <span className="text-[#D4AF37]">{content.senseiAi.highlight}</span>
                   </h3>
                   <p className="text-gray-300 font-body text-xs sm:text-sm max-w-lg leading-relaxed">
-                    Have questions on kata geometry, sparring counter-punches, belt test syllabus, or class schedules? Consult your dedicated digital Sensei.
+                    {content.senseiAi.description}
                   </p>
                 </div>
               </div>
@@ -249,7 +251,7 @@ export default function Landing() {
                 <Link to="/sensei" className="w-full sm:w-auto">
                   <GoldButton size="lg" className="w-full flex items-center justify-center gap-2">
                     <ChatBotIcon className="w-4 h-4 text-black" />
-                    Consult Sensei AI
+                    {content.senseiAi.buttonText}
                   </GoldButton>
                 </Link>
               </div>
@@ -263,100 +265,77 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center space-y-3 max-w-2xl mx-auto">
             <span className="text-xs font-heading uppercase tracking-[0.3em] text-[#D4AF37]">
-              Curriculum Programs
+              {content.programs.eyebrow}
             </span>
             <h2 className="font-heading text-4xl md:text-5xl font-bold uppercase text-white leading-tight">
-              Martial Arts For <span className="text-[#D4AF37]">Every Age</span>
+              {content.programs.heading} <span className="text-[#D4AF37]">{content.programs.highlight}</span>
             </h2>
             <p className="text-sm md:text-base text-gray-400 font-body leading-relaxed">
-              From our play-based Lionmode Kids to tournament-tested champions, our curriculum builds lifelong discipline, confidence, and respect.
+              {content.programs.description}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                title: "Lionmode Kids",
-                age: "Ages 3 – 8",
-                desc: "Play-based martial arts learning to increase attention span, build motor and hand-eye coordination, and foster deep respect.",
-                features: ["Balance & Stances", "Focus Drills", "Confidence & Discipline", "Play-Based Coordination"],
-                image: images.kids_training || "https://content.app-sources.com/s/09941769835917864/uploads/Images/20210909_175558-7415561.jpg",
-                badge: "Foundational"
-              },
-              {
-                title: "Little Lions",
-                age: "Ages 8 – 12",
-                desc: "Action-packed karate classes emphasizing focus, self-control, and determination while sharpening agility and kata fundamentals.",
-                features: ["Kata Forms (Heian)", "Basic Kumite Sparring", "Anti-Bully Confidence", "Belt Progression"],
-                image: images.junior_kata || "https://content.app-sources.com/s/09941769835917864/uploads/Images/467284781_18123799843393050_739399674060152822_n-4431799.jpg",
-                badge: "Most Popular"
-              },
-              {
-                title: "Lionmode Teens",
-                age: "Ages 13 – 18",
-                desc: "Develop martial arts foundation, mental toughness, practical self-defense, conflict resolution, strength, conditioning, and stamina.",
-                features: ["Advanced Kumite", "Street Self-Defense", "Athletic Conditioning", "Leadership & Integrity"],
-                image: images.sparring_action || "https://content.app-sources.com/s/09941769835917864/uploads/Images/241426277_229185769151696_3286067128154972950_n-7424218.jpg",
-                badge: "Cadet Squad"
-              },
-              {
-                title: "Adult & Senior Class",
-                age: "Ages 18+",
-                desc: "Traditional Shotokan and sports karate, practical street self-defense, flexibility, core conditioning, and black belt excellence.",
-                features: ["Traditional Bunkai", "Full Body Conditioning", "Stress Relief & Focus", "Black Belt Progression"],
-                image: images.champion_medals || "https://content.app-sources.com/s/09941769835917864/uploads/Images/469533008_18125826691393050_7552599873704125080_n-4431896.jpg",
-                badge: "All Levels"
-              }
-            ].map((prog) => (
-              <motion.div
-                key={prog.title}
-                whileHover={{ y: -6 }}
-                className="bg-white/[0.03] border border-white/10 hover:border-[#D4AF37]/50 rounded-3xl overflow-hidden backdrop-blur-xl transition-all shadow-xl flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={prog.image}
-                      alt={prog.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-85"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
-                    <span className="absolute top-3 left-3 px-3 py-1 rounded-xl bg-black/80 backdrop-blur-md text-[#D4AF37] border border-[#D4AF37]/30 text-[10px] font-heading uppercase tracking-wider font-bold">
-                      {prog.badge}
-                    </span>
-                    <span className="absolute bottom-3 right-3 text-xs bg-[#D4AF37] text-black font-heading uppercase px-2.5 py-0.5 rounded-lg font-bold">
-                      {prog.age}
-                    </span>
-                  </div>
+            {content.programs.list.map((prog, index) => {
+              const defaultImages = [
+                images.kids_training || "https://content.app-sources.com/s/09941769835917864/uploads/Images/20210909_175558-7415561.jpg",
+                images.junior_kata || "https://content.app-sources.com/s/09941769835917864/uploads/Images/467284781_18123799843393050_739399674060152822_n-4431799.jpg",
+                images.sparring_action || "https://content.app-sources.com/s/09941769835917864/uploads/Images/241426277_229185769151696_3286067128154972950_n-7424218.jpg",
+                images.champion_medals || "https://content.app-sources.com/s/09941769835917864/uploads/Images/469533008_18125826691393050_7552599873704125080_n-4431896.jpg"
+              ];
+              const progImg = defaultImages[index % defaultImages.length];
 
-                  <div className="p-6 space-y-3">
-                    <h3 className="font-heading text-2xl font-bold uppercase text-white group-hover:text-[#D4AF37] transition-colors">
-                      {prog.title}
-                    </h3>
-                    <p className="text-xs text-gray-400 font-body leading-relaxed">
-                      {prog.desc}
-                    </p>
+              return (
+                <motion.div
+                  key={prog.id || prog.title}
+                  whileHover={{ y: -6 }}
+                  className="bg-white/[0.03] border border-white/10 hover:border-[#D4AF37]/50 rounded-3xl overflow-hidden backdrop-blur-xl transition-all shadow-xl flex flex-col justify-between group"
+                >
+                  <div>
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={progImg}
+                        alt={prog.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-85"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] to-transparent" />
+                      <span className="absolute top-3 left-3 px-3 py-1 rounded-xl bg-black/80 backdrop-blur-md text-[#D4AF37] border border-[#D4AF37]/30 text-[10px] font-heading uppercase tracking-wider font-bold">
+                        {prog.badge}
+                      </span>
+                      <span className="absolute bottom-3 right-3 text-xs bg-[#D4AF37] text-black font-heading uppercase px-2.5 py-0.5 rounded-lg font-bold">
+                        {prog.age}
+                      </span>
+                    </div>
 
-                    <div className="pt-2 space-y-1.5 border-t border-white/5">
-                      {prog.features.map((feat, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs text-gray-300 font-body">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
-                          <span>{feat}</span>
-                        </div>
-                      ))}
+                    <div className="p-6 space-y-3">
+                      <h3 className="font-heading text-2xl font-bold uppercase text-white group-hover:text-[#D4AF37] transition-colors">
+                        {prog.title}
+                      </h3>
+                      <p className="text-xs text-gray-400 font-body leading-relaxed">
+                        {prog.desc}
+                      </p>
+
+                      <div className="pt-2 space-y-1.5 border-t border-white/5">
+                        {prog.features.map((feat, i) => (
+                          <div key={i} className="flex items-center gap-2 text-xs text-gray-300 font-body">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                            <span>{feat}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="p-6 pt-0">
-                  <Link to={`/trial?program=${encodeURIComponent(prog.title + " (" + prog.age + ")")}`} className="block w-full">
-                    <button className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-[#D4AF37]/10 border border-white/10 hover:border-[#D4AF37]/40 text-[#D4AF37] font-heading uppercase tracking-wider text-xs font-semibold transition-all cursor-pointer">
-                      Book Free VIP Trial Pass
-                    </button>
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
+                  <div className="p-6 pt-0">
+                    <Link to={`/trial?program=${encodeURIComponent(prog.title + " (" + prog.age + ")")}`} className="block w-full">
+                      <button className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-[#D4AF37]/10 border border-white/10 hover:border-[#D4AF37]/40 text-[#D4AF37] font-heading uppercase tracking-wider text-xs font-semibold transition-all cursor-pointer">
+                        {prog.buttonText || "Book Free VIP Trial Pass"}
+                      </button>
+                    </Link>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -368,20 +347,20 @@ export default function Landing() {
             <div className="space-y-2">
               <span className="text-xs font-heading uppercase tracking-[0.3em] text-[#D4AF37] flex items-center gap-1.5 font-bold">
                 <ShoppingBag className="w-4 h-4 text-[#D4AF37]" />
-                Official Dojo Store
+                {content.shopShowcase.eyebrow}
               </span>
               <h2 className="font-heading text-3xl md:text-5xl font-bold uppercase text-white leading-tight">
-                Lion Mode <span className="text-[#D4AF37]">Pro Shop</span>
+                {content.shopShowcase.heading} <span className="text-[#D4AF37]">{content.shopShowcase.highlight}</span>
               </h2>
               <p className="text-xs md:text-sm text-gray-400 font-body max-w-xl leading-relaxed">
-                Shop official Kimura Dojo uniforms, WKF-approved protective sparring equipment, student training gear, and apparel. Open to both members and the public.
+                {content.shopShowcase.description}
               </p>
             </div>
 
             <Link to="/shop">
               <GoldButton size="md" className="flex items-center gap-2">
                 <ShoppingBag className="w-4 h-4 text-black" />
-                <span>Visit Full Pro Shop</span>
+                <span>{content.shopShowcase.buttonText}</span>
                 <ArrowRight className="w-4 h-4 text-black" />
               </GoldButton>
             </Link>
@@ -456,26 +435,31 @@ export default function Landing() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A] via-[#080808]/80 to-[#0A0A0A]" />
         <div className="relative max-w-4xl mx-auto text-center px-6">
           <p className="font-heading text-sm uppercase tracking-[0.35em] mb-3 text-primary">
-            About Lionmode
+            {content.about.eyebrow}
           </p>
           <h2 className="font-heading text-4xl md:text-6xl font-bold uppercase text-white leading-[0.95] mb-6">
-            More Than a <span className="text-primary">Dojo</span>
+            {content.about.heading} <span className="text-primary">{content.about.highlight}</span>
           </h2>
           <p className="text-[#A8A8A8] font-body text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-            For over 25 years, Lionmode Karate Academy has built champions on a foundation of traditional and sports karate in Durban, South Africa. We believe martial arts is more than fighting — it's about building character, discipline, and a community that supports each other on and off the mat.
+            {content.about.storyParagraph1}
           </p>
+          {content.about.storyParagraph2 && (
+            <p className="text-[#A8A8A8] font-body text-base md:text-lg leading-relaxed max-w-2xl mx-auto mt-4">
+              {content.about.storyParagraph2}
+            </p>
+          )}
           <div className="mt-8 flex flex-wrap gap-4 justify-center">
             <a
               href="#contact"
               className="inline-flex select-none items-center gap-2 px-7 py-3.5 rounded-full font-heading text-sm font-bold uppercase tracking-wider bg-primary text-primary-foreground transition hover:opacity-90 cursor-pointer"
             >
-              Book a Free Trial
+              {content.about.primaryButtonText}
             </a>
             <Link
               to="/classes"
               className="inline-flex select-none items-center gap-2 px-7 py-3.5 rounded-full font-heading text-sm font-bold uppercase tracking-wider bg-white/5 text-white border border-white/15 transition hover:bg-white/10 cursor-pointer"
             >
-              View Class Schedule
+              {content.about.secondaryButtonText}
             </Link>
           </div>
         </div>
@@ -486,13 +470,13 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-3 max-w-2xl mx-auto">
             <span className="text-xs font-heading uppercase tracking-[0.3em] text-[#D4AF37]">
-              Start Your Journey
+              {content.contact.eyebrow}
             </span>
             <h2 className="font-heading text-4xl md:text-5xl font-bold uppercase text-white leading-tight">
-              Book Your <span className="text-[#D4AF37]">Free Trial</span>
+              {content.contact.heading} <span className="text-[#D4AF37]">{content.contact.highlight}</span>
             </h2>
             <p className="text-sm md:text-base text-gray-400 font-body leading-relaxed">
-              Step onto the tatami at Lion Mode Karate Academy. Experience our high-energy training with zero obligation.
+              {content.contact.subtitle}
             </p>
           </div>
 
@@ -501,10 +485,10 @@ export default function Landing() {
             <div className="lg:col-span-5 space-y-6">
               <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 md:p-8 space-y-5 backdrop-blur-xl">
                 <h3 className="font-heading text-2xl font-bold uppercase text-white">
-                  Lion Mode Karate Academy
+                  {content.contact.dojoName}
                 </h3>
                 <p className="text-xs text-gray-400 font-body leading-relaxed">
-                  Durban's premier martial arts center for children, teenagers, and adult athletes.
+                  {content.contact.dojoSubtitle}
                 </p>
 
                 <div className="space-y-4 pt-2 text-xs text-gray-300 font-body">
@@ -514,8 +498,8 @@ export default function Landing() {
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-heading text-gray-400">Email Address</p>
-                      <a href="mailto:lionsdentck@gmail.com" className="text-white hover:text-[#D4AF37] transition-colors">
-                        lionsdentck@gmail.com
+                      <a href={`mailto:${content.contact.email}`} className="text-white hover:text-[#D4AF37] transition-colors">
+                        {content.contact.email}
                       </a>
                     </div>
                   </div>
@@ -526,7 +510,7 @@ export default function Landing() {
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-heading text-gray-400">Head Master</p>
-                      <p className="text-white">Sensei Babu (5th Dan Black Belt)</p>
+                      <p className="text-white">{content.contact.headMaster}</p>
                     </div>
                   </div>
 
@@ -536,7 +520,7 @@ export default function Landing() {
                     </div>
                     <div>
                       <p className="text-[10px] uppercase font-heading text-gray-400">Dojo Training Hours</p>
-                      <p className="text-white">Mon – Fri: 15:30 – 20:00 • Sat: 08:30 – 13:00</p>
+                      <p className="text-white">{content.contact.trainingHours}</p>
                     </div>
                   </div>
                 </div>
@@ -630,7 +614,7 @@ export default function Landing() {
                 </div>
 
                 <GoldButton type="submit" size="lg" className="w-full mt-2">
-                  Confirm Free Trial Lesson
+                  {content.contact.formButtonText}
                 </GoldButton>
               </form>
             </div>
@@ -654,24 +638,24 @@ export default function Landing() {
               />
             </div>
             <span className="font-heading text-base sm:text-lg font-bold uppercase tracking-wider text-white mt-2">
-              Lionmode Karate
+              {content.footer.brandName}
             </span>
             <span className="text-[10px] font-heading font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">
-              Karate Academy
+              {content.footer.brandSubtitle}
             </span>
           </div>
 
           {/* Email Address directly below the black icon logo */}
           <div className="space-y-1.5">
             <a
-              href="mailto:lionsdentck@gmail.com"
+              href={`mailto:${content.footer.email}`}
               className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-gray-300 hover:text-[#D4AF37] font-body transition-colors group"
             >
               <Mail className="w-3.5 h-3.5 text-[#D4AF37] group-hover:scale-110 transition-transform" />
-              <span>lionsdentck@gmail.com</span>
+              <span>{content.footer.email}</span>
             </a>
             <p className="text-xs text-gray-500 font-body">
-              © 2026 Lionmode Karate. All rights reserved.
+              {content.footer.copyrightText}
             </p>
             <div className="flex items-center justify-center gap-3 pt-2 text-[11px] font-body text-gray-400">
               <Link to="/privacy" className="hover:text-[#D4AF37] transition-colors">Privacy Policy</Link>

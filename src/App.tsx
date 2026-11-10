@@ -34,6 +34,7 @@ const AdminOrders = lazy(() => import('./pages/AdminOrders'));
 const TrialFunnelPage = lazy(() => import('./pages/TrialFunnelPage'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const AthletaOffice = lazy(() => import('./pages/AthletaOffice'));
 import PersonaSwitcher from '@/components/shared/PersonaSwitcher';
 
 const AuthenticatedApp = () => {
@@ -63,6 +64,13 @@ const AuthenticatedApp = () => {
           <Route path="/shop" element={<Shop />} />
           <Route path="/shop/:id" element={<ProductDetail />} />
         </Route>
+        <Route path="/admin/athleta-office" element={<AthletaOffice />} />
+        <Route path="/admin/athleta-office/my-profile" element={<AthletaOffice />} />
+        <Route path="/athleta-office" element={<AthletaOffice />} />
+        <Route path="/athleta-office/my-profile" element={<AthletaOffice />} />
+        <Route path="/Teacher/v2/en/my-profile" element={<AthletaOffice />} />
+        <Route path="/Teacher/v2/en/home" element={<AthletaOffice />} />
+        <Route path="/Teacher/*" element={<AthletaOffice />} />
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/sensei" element={<SenseiChatPage />} />
